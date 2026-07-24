@@ -39,12 +39,7 @@ class RegisterController extends Controller
             ]);
 
             if (isset($result['user'])) {
-                User::create([
-                    'id' => $result['user']['id'],
-                    'email' => $request->email,
-                    'full_name' => $request->full_name,
-                    'role' => 'owner',
-                ]);
+                // User is automatically created in public.users via Supabase DB trigger on_auth_user_created
 
                 session([
                     'supabase_access_token' => $result['access_token'] ?? null,

@@ -51,37 +51,51 @@ class AnalysisController extends Controller
         $userSession = session('supabase_user');
         $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
 
-        $lat = -6.2444; // Default Jakarta Selatan coords
-        $lng = 106.8006;
+        $lat = $profile->latitude ?? -6.2444;
+        $lng = $profile->longitude ?? 106.8006;
 
         $scrapedCompetitors = $this->scraper->discoverCompetitors($request->location_query, $lat, $lng, (float)$request->radius_km);
         $demographics = $this->bpsService->getDemographics($request->location_query);
         $score = $this->scoreService->calculateScore($profile->business_type ?? 'F&B', count($scrapedCompetitors), $demographics['density']);
 
-        $analysis = MarketAnalysis::create([
-            'umkm_id' => $profile->id,
-            'location_query' => $request->location_query,
-            'latitude' => $lat,
-            'longitude' => $lng,
-            'radius_km' => $request->radius_km,
-            'market_fit_score' => $score,
-            'demographic_data' => $demographics,
-            'status' => 'completed',
-        ]);
-
-        foreach ($scrapedCompetitors as $comp) {
-            Competitor::create([
-                'analysis_id' => $analysis->id,
-                'name' => $comp['name'],
-                'business_type' => $comp['business_type'],
-                'rating' => $comp['rating'],
-                'review_count' => $comp['review_count'],
-                'sentiment' => $comp['sentiment'],
-                'address' => $comp['address'],
-                'latitude' => $comp['latitude'],
-                'longitude' => $comp['longitude'],
+        $analysis = \Illuminate\Support\Facades\DB::transaction(function () use ($profile, $request, $lat, $lng, $score, $demographics, $scrapedCompetitors) {
+            $analysis = MarketAnalysis::create([
+                'umkm_id' => $profile->id,
+                'location_query' => $request->location_query,
+                'latitude' => $lat,
+                'longitude' => $lng,
+                'radius_km' => $request->radius_km,
+                'market_fit_score' => $score,
+                'demographic_data' => $demographics,
+                'status' => 'completed',
             ]);
-        }
+
+            \App\Models\Demographic::create([
+                'umkm_id' => $profile->id,
+                'analysis_id' => $analysis->id,
+                'area_name' => $request->location_query,
+                'population_data' => $demographics['population'] ?? [],
+                'income_data' => $demographics['income'] ?? [],
+                'age_distribution' => $demographics['age_distribution'] ?? [],
+                'data_source' => 'bps',
+            ]);
+
+            foreach ($scrapedCompetitors as $comp) {
+                Competitor::create([
+                    'analysis_id' => $analysis->id,
+                    'name' => $comp['name'],
+                    'business_type' => $comp['business_type'],
+                    'rating' => $comp['rating'],
+                    'review_count' => $comp['review_count'],
+                    'sentiment' => $comp['sentiment'],
+                    'address' => $comp['address'],
+                    'latitude' => $comp['latitude'],
+                    'longitude' => $comp['longitude'],
+                ]);
+            }
+
+            return $analysis;
+        });
 
         return redirect()->route('sipasar.results', $analysis->id)->with('success', 'Riset pasar berhasil dijalankan!');
     }

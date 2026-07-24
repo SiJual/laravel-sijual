@@ -55,14 +55,29 @@ class TransactionController extends Controller
         $userSession = session('supabase_user');
         $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
 
-        $outlet = $request->outlet_id
-            ? Outlet::where('umkm_id', $profile->id)->where('id', $request->outlet_id)->first()
-            : Outlet::where('umkm_id', $profile->id)->where('is_primary', true)->first();
+        $outlet = null;
+        if ($request->outlet_id) {
+            $outlet = Outlet::where('umkm_id', $profile->id)->where('id', $request->outlet_id)->first();
+            if (!$outlet) {
+                return back()->withErrors(['outlet_id' => 'Outlet tidak valid atau bukan milik Anda.'])->withInput();
+            }
+        } else {
+            $outlet = Outlet::where('umkm_id', $profile->id)->where('is_primary', true)->first();
+        }
+
+        $category = Category::where('id', $request->category_id)
+            ->where(function ($q) use ($profile) {
+                $q->where('is_system', true)->orWhere('umkm_id', $profile->id);
+            })->first();
+
+        if (!$category) {
+            return back()->withErrors(['category_id' => 'Kategori tidak valid.'])->withInput();
+        }
 
         Transaction::create([
             'umkm_id' => $profile->id,
             'outlet_id' => $outlet ? $outlet->id : null,
-            'category_id' => $request->category_id,
+            'category_id' => $category->id,
             'type' => $request->type,
             'amount' => $request->amount,
             'description' => $request->description,

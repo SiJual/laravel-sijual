@@ -35,7 +35,7 @@ class LoginController extends Controller
 
             // Sync user to local database if not exists
             if (isset($result['user'])) {
-                User::firstOrCreate(
+                $user = User::firstOrCreate(
                     ['id' => $result['user']['id']],
                     [
                         'email' => $result['user']['email'] ?? $request->email,
@@ -44,6 +44,8 @@ class LoginController extends Controller
                         'role' => 'owner',
                     ]
                 );
+                
+                \Illuminate\Support\Facades\Auth::login($user);
             }
 
             session([
@@ -64,9 +66,14 @@ class LoginController extends Controller
     {
         $token = session('supabase_access_token');
         if ($token) {
-            $this->auth->signOut($token);
+            try {
+                $this->auth->signOut($token);
+            } catch (\Throwable $e) {
+                // Ignore API failure to ensure local session is still flushed
+            }
         }
 
+        \Illuminate\Support\Facades\Auth::logout();
         session()->flush();
         return redirect()->route('login');
     }

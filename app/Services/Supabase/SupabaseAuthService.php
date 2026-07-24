@@ -100,21 +100,22 @@ class SupabaseAuthService
     /**
      * Dapatkan URL untuk OAuth Google.
      */
-    public function getGoogleOAuthUrl(string $redirectTo): string
+    public function getGoogleOAuthUrl(string $redirectTo, string $codeChallenge): string
     {
-        return "{$this->url}/auth/v1/authorize?provider=google&redirect_to=" . urlencode($redirectTo);
+        return "{$this->url}/auth/v1/authorize?provider=google&redirect_to=" . urlencode($redirectTo) . "&code_challenge_method=s256&code_challenge=" . urlencode($codeChallenge);
     }
 
     /**
      * Exchange auth code untuk session token.
      */
-    public function exchangeCodeForSession(string $code): array
+    public function exchangeCodeForSession(string $code, string $codeVerifier): array
     {
         $response = Http::withHeaders([
             'apikey' => $this->key,
             'Content-Type' => 'application/json',
         ])->post("{$this->url}/auth/v1/token?grant_type=pkce", [
             'auth_code' => $code,
+            'code_verifier' => $codeVerifier,
         ]);
 
         if ($response->failed()) {

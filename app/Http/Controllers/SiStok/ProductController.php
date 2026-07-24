@@ -30,7 +30,7 @@ class ProductController extends Controller
 
         $totalProducts = Product::where('umkm_id', $profile->id)->count();
         $lowStockItems = Product::where('umkm_id', $profile->id)->whereColumn('stock_level', '<=', 'low_stock_threshold')->count();
-        $estValue = Product::where('umkm_id', $profile->id)->selectRaw('SUM(price * stock_level) as val')->value('val') ?? 0;
+        $estValue = Product::where('umkm_id', $profile->id)->selectRaw('CAST(SUM(price * stock_level) AS BIGINT) as val')->value('val') ?? 0;
 
         return view('sistok.index', [
             'activeNav' => 'sistok',
@@ -50,6 +50,7 @@ class ProductController extends Controller
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0',
             'stock_level' => 'required|integer|min:0',
+            'image_url' => 'nullable|url|max:2048',
         ]);
 
         $userSession = session('supabase_user');
@@ -66,6 +67,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'stock_level' => $request->stock_level,
             'status' => $status,
+            'image_url' => $request->image_url,
             'low_stock_threshold' => $threshold,
         ]);
 

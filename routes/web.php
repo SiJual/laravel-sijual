@@ -48,7 +48,7 @@ Route::middleware(['auth.supabase'])->group(function () {
         // SiPasar Routes
         Route::prefix('sipasar')->name('sipasar.')->group(function () {
             Route::get('/', [App\Http\Controllers\SiPasar\AnalysisController::class, 'index'])->name('landing');
-            Route::post('/analyze', [App\Http\Controllers\SiPasar\AnalysisController::class, 'analyze'])->name('analyze');
+            Route::post('/analyze', [App\Http\Controllers\SiPasar\AnalysisController::class, 'analyze'])->name('analyze')->middleware('throttle:10,1');
             Route::get('/results/{analysis}', [App\Http\Controllers\SiPasar\AnalysisController::class, 'results'])->name('results');
             Route::get('/competitors/{analysis}', [App\Http\Controllers\SiPasar\CompetitorController::class, 'index'])->name('competitors');
             Route::get('/demographics/{analysis}', [App\Http\Controllers\SiPasar\DemographicController::class, 'index'])->name('demographics');

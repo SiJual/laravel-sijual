@@ -98,6 +98,11 @@ class ProfileController extends Controller
 
         $profile->update($sanitizedData);
 
+        Outlet::where('umkm_id', $profile->id)->where('is_primary', true)->update([
+            'name' => $sanitizedData['business_name'] . ' (Pusat)',
+            'address' => $sanitizedData['address'],
+        ]);
+
         return back()->with('success', 'Profil usaha berhasil diperbarui.');
     }
 }

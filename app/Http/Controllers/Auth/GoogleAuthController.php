@@ -14,23 +14,29 @@ class GoogleAuthController extends Controller
 
     public function redirect(): RedirectResponse
     {
+        $codeVerifier = bin2hex(random_bytes(32));
+        session(['supabase_code_verifier' => $codeVerifier]);
+        
+        $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+        
         $redirectUrl = route('auth.google.callback');
-        return redirect()->away($this->auth->getGoogleOAuthUrl($redirectUrl));
+        return redirect()->away($this->auth->getGoogleOAuthUrl($redirectUrl, $codeChallenge));
     }
 
     public function callback(Request $request): RedirectResponse
     {
         $code = $request->query('code');
+        $codeVerifier = session('supabase_code_verifier');
 
-        if (!$code) {
-            return redirect()->route('login')->with('error', 'Autentikasi Google dibatalkan.');
+        if (!$code || !$codeVerifier) {
+            return redirect()->route('login')->with('error', 'Autentikasi Google dibatalkan atau sesi kadaluarsa.');
         }
 
         try {
-            $result = $this->auth->exchangeCodeForSession($code);
+            $result = $this->auth->exchangeCodeForSession($code, $codeVerifier);
 
             if (isset($result['user'])) {
-                User::firstOrCreate(
+                $user = User::firstOrCreate(
                     ['id' => $result['user']['id']],
                     [
                         'email' => $result['user']['email'],
@@ -39,6 +45,8 @@ class GoogleAuthController extends Controller
                         'role' => 'owner',
                     ]
                 );
+                
+                \Illuminate\Support\Facades\Auth::login($user);
             }
 
             session([
@@ -49,7 +57,8 @@ class GoogleAuthController extends Controller
 
             return redirect()->route('dashboard');
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Gagal masuk dengan Google. Silakan coba lagi.');
+            \Illuminate\Support\Facades\Log::error('Google Auth Error: ' . $e->getMessage());
+            return redirect()->route('login')->with('error', 'Gagal masuk dengan Google. Error: ' . $e->getMessage());
         }
     }
 }

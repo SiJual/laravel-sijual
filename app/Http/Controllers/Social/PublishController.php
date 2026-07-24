@@ -25,7 +25,7 @@ class PublishController extends Controller
         ]);
 
         try {
-            $scheduledTime = Carbon::parse($request->scheduled_at);
+            $scheduledTime = Carbon::parse($request->scheduled_at, 'Asia/Jakarta')->setTimezone('UTC');
             
             $job = $this->scheduler->schedule(
                 $request->content_id,
@@ -52,9 +52,15 @@ class PublishController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        // Assuming user relations and context
+        $userSession = session('supabase_user');
+        $profile = \App\Models\UmkmProfile::where('user_id', $userSession['id'])->first();
+
+        if (!$profile) {
+            return response()->json(['status' => 'error', 'message' => 'Profil UMKM tidak ditemukan'], 404);
+        }
+
         $jobs = PublishJob::with('contentAsset')
-                          // ->whereHas('contentAsset', fn($q) => $q->where('user_id', auth()->id()))
+                          ->whereHas('contentAsset', fn($q) => $q->where('umkm_id', $profile->id))
                           ->orderBy('scheduled_at', 'asc')
                           ->get();
 

@@ -65,16 +65,10 @@ PROMPT;
                 ];
             }
         } catch (\Throwable $e) {
-            // Fallback safe default
+            throw new \Exception('Gagal menganalisis transaksi menggunakan AI: ' . $e->getMessage());
         }
 
-        return [
-            'type' => 'expense',
-            'amount' => 0,
-            'description' => $text,
-            'category' => 'Lain-lain',
-            'confidence' => 0.0,
-        ];
+        throw new \Exception('Gagal menganalisis transaksi menggunakan AI: Format response tidak valid.');
     }
 
     private function callGemini(string $prompt, array $options = []): string
@@ -85,7 +79,7 @@ PROMPT;
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$this->apiKey}";
 
-        $response = Http::post($url, [
+        $response = Http::timeout(15)->post($url, [
             'contents' => [
                 [
                     'parts' => [
