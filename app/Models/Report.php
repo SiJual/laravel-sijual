@@ -5,32 +5,36 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class User extends Model
+class Report extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'users';
+    protected $table = 'reports';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
-        'email',
-        'full_name',
-        'phone',
-        'avatar_url',
-        'role',
+        'umkm_id',
+        'type',
+        'period_start',
+        'period_end',
+        'data',
+        'file_url',
     ];
 
     protected $casts = [
+        'period_start' => 'date',
+        'period_end' => 'date',
+        'data' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    public function umkmProfiles(): HasMany
+    public function umkmProfile(): BelongsTo
     {
-        return $this->hasMany(UmkmProfile::class, 'user_id');
+        return $this->belongsTo(UmkmProfile::class, 'umkm_id');
     }
 }

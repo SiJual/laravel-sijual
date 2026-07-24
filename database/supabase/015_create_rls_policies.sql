@@ -1,0 +1,16 @@
+-- Multi-Tenant RLS Consolidation and Verification
+-- Ensure RLS is active on all tenant tables
+
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.umkm_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.outlets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.market_analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.competitors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.demographics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.content_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.publish_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;

@@ -1,0 +1,12 @@
+CREATE INDEX IF NOT EXISTS idx_umkm_profiles_user_id ON public.umkm_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_outlets_umkm_id ON public.outlets(umkm_id);
+CREATE INDEX IF NOT EXISTS idx_categories_umkm_id ON public.categories(umkm_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_umkm_outlet_date ON public.transactions(umkm_id, outlet_id, transaction_date);
+CREATE INDEX IF NOT EXISTS idx_transactions_category_id ON public.transactions(category_id);
+CREATE INDEX IF NOT EXISTS idx_reports_umkm_id ON public.reports(umkm_id);
+CREATE INDEX IF NOT EXISTS idx_market_analyses_umkm_id ON public.market_analyses(umkm_id);
+CREATE INDEX IF NOT EXISTS idx_competitors_analysis_id ON public.competitors(analysis_id);
+CREATE INDEX IF NOT EXISTS idx_demographics_umkm_id ON public.demographics(umkm_id);
+CREATE INDEX IF NOT EXISTS idx_content_assets_umkm_status ON public.content_assets(umkm_id, status);
+CREATE INDEX IF NOT EXISTS idx_publish_jobs_content_id ON public.publish_jobs(content_id);
+CREATE INDEX IF NOT EXISTS idx_products_umkm_category ON public.products(umkm_id, category);

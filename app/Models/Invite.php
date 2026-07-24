@@ -5,32 +5,40 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class User extends Model
+class Invite extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'users';
+    protected $table = 'invites';
     protected $keyType = 'string';
     public $incrementing = false;
 
     protected $fillable = [
         'id',
+        'umkm_id',
+        'invited_by',
         'email',
-        'full_name',
-        'phone',
-        'avatar_url',
         'role',
+        'status',
+        'token',
+        'expires_at',
     ];
 
     protected $casts = [
+        'expires_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    public function umkmProfiles(): HasMany
+    public function umkmProfile(): BelongsTo
     {
-        return $this->hasMany(UmkmProfile::class, 'user_id');
+        return $this->belongsTo(UmkmProfile::class, 'umkm_id');
+    }
+
+    public function inviter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
     }
 }
