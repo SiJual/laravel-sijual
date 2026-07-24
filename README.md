@@ -39,8 +39,8 @@ Pengembangan proyek ini mengikuti standar dan dokumentasi internal berikut:
 
 1. **Clone Repository**
    ```bash
-   git clone https://github.com/SiJual/sijual.git
-   cd sijual
+   git clone https://github.com/SiJual/laravel-sijual.git
+   cd laravel-sijual
    ```
 
 2. **Install Dependensi**
