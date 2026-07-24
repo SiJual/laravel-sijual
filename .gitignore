@@ -1,0 +1,48 @@
+# Environment & Credentials Security
+.env
+.env.*
+!.env.example
+*.env
+/auth.json
+*.pem
+*.crt
+*.key
+*.pfx
+*.p12
+/storage/*.key
+
+# Project PRD & Local Specs (Local Workspace Only)
+sijual_prd*/
+sijual_prd_v2/
+
+# Dependencies & Build Outputs
+/node_modules
+/vendor
+/public/build
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+
+# Logs & Storage Dumps
+*.log
+/storage/pail
+
+# IDEs & Editor Files
+.DS_Store
+Thumbs.db
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.vscode
+/.zed
+/.fleet
+_ide_helper.php
+.phpstorm.meta.php
+.phpactor.json
+Homestead.json
+Homestead.yaml
+
+# Testing & Cache
+/.phpunit.cache
+.phpunit.result.cache
