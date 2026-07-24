@@ -18,6 +18,7 @@ class Demographic extends Model
     protected $fillable = [
         'id',
         'umkm_id',
+        'analysis_id',
         'area_name',
         'population_data',
         'income_data',
@@ -38,5 +39,10 @@ class Demographic extends Model
     public function umkmProfile(): BelongsTo
     {
         return $this->belongsTo(UmkmProfile::class, 'umkm_id');
+    }
+
+    public function analysis(): BelongsTo
+    {
+        return $this->belongsTo(MarketAnalysis::class, 'analysis_id');
     }
 }

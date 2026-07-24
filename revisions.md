@@ -1,25 +1,41 @@
-# SiJual — Hasil Review Keseluruhan (Phase 4 hingga Phase 10)
+# SiJual — Revisions Log
 
-## 🎉 STATUS: ALL CLEARED (PRODUCTION READY)
+## Revisi Skema Database (Audit 2026-07-24) — ✅ SELESAI
 
-Berdasarkan pengecekan mendalam terhadap perbaikan yang dilakukan bawahan AI Anda, saya dengan bangga menyatakan bahwa **seluruh masalah kritikal, bug, dan file yang hilang telah diselesaikan dengan sangat baik!**
+Berdasarkan audit mendalam terhadap 17 file SQL migrasi vs PRD dan Eloquent Models, ditemukan 6 masalah skema. Seluruhnya telah diperbaiki.
 
-### Detail Perbaikan yang Telah Dieksekusi:
+### Perbaikan yang Telah Dieksekusi:
 
-1. **Kelengkapan Fitur & Services (LULUS) ✅**
-   - Integrasi `WhisperSTTService.php` telah dibangun.
-   - Pipa analisis AI (SiPasar) seperti `SentimentTaggingService`, `TrendDetectionService`, dll telah lengkap.
-   - Pipa publikasi Social Media (SiPromo) termasuk integrasi `MetaOAuthService`, `BrandGuardService`, dan `PublishSchedulerService` sudah tersedia.
+- [x] **Fix #1: Duplikasi nomor migrasi `016_`**
+  - `016_create_storage_rls_policies.sql` → di-rename menjadi `017_create_storage_rls_policies.sql`
 
-2. **Testing (LULUS) ✅**
-   - *Feature tests* krusial telah ditambahkan (`AuthTest.php`, `TransactionControllerTest.php`), membuktikan *backend* kini dites secara nyata, bukan sekadar centang palsu.
+- [x] **Fix #2: Tabel `reports` — kolom agregasi fisik**
+  - Ditambahkan kolom `total_income`, `total_expense`, `net_profit`, `transaction_count` (BIGINT/INT)
+  - Model `Report.php` di-update (`$fillable` + `$casts`)
 
-3. **Keamanan & Vulnerability (LULUS) ✅**
-   - **XSS Fixed**: Sanitasi input (menggunakan `strip_tags`) telah diimplementasikan dengan benar pada `ProfileController.php`.
-   - **Rate Limiting Fixed**: Proteksi `throttle:10,1` (10 request per menit) telah dipasang di `routes/web.php` untuk memproteksi API Gemini dan Flux dari *abuse* (Denial of Wallet).
-   - **Storage RLS Fixed**: File migrasi baru `016_create_storage_rls_policies.sql` sukses dibangun untuk memproteksi bucket `sijual-assets` di Supabase.
+- [x] **Fix #3: Tabel `demographics` — relasi ke `market_analyses`**
+  - Ditambahkan kolom `analysis_id UUID REFERENCES market_analyses(id)`
+  - Model `Demographic.php` di-update (`$fillable` + relasi `analysis()`)
+  - Model `MarketAnalysis.php` di-update (relasi `demographics()`)
 
-4. **Infrastruktur Deployment (LULUS) ✅**
-   - Laravel Scheduler (cron jobs) di `routes/console.php` telah dirangkai untuk menangani eksekusi background `QrisSyncService` dan `PublishSchedulerService`.
+- [x] **Fix #4: Auth sync trigger (`auth.users` → `public.users`)**
+  - Dibuat function + trigger `on_auth_user_created` (INSERT) dan `on_auth_user_updated` (UPDATE)
 
-Proyek aplikasi UMKM **SiJual** kini telah memiliki pilar *backend* yang kokoh, arsitektur AI yang fungsional, serta pondasi keamanan yang siap untuk dipamerkan di panggung Hackathon!
+- [x] **Fix #5: UNIQUE constraint pada `umkm_profiles.user_id`**
+  - Ditambahkan `UNIQUE (user_id)` untuk menjamin relasi one-to-one
+
+- [x] **Fix #6: CHECK constraint pada `products.category`**
+  - Nilai dibatasi ke: `textiles`, `handicrafts`, `food_bev`, `services`, `other`
+
+### File yang Di-modify / Dibuat:
+
+| File | Aksi |
+|---|---|
+| `database/supabase/018_schema_patch_audit.sql` | **BARU** — SQL patch gabungan |
+| `database/supabase/017_create_storage_rls_policies.sql` | **RENAME** dari `016_` |
+| `app/Models/Report.php` | **UPDATE** — `$fillable` + `$casts` |
+| `app/Models/Demographic.php` | **UPDATE** — `$fillable` + relasi `analysis()` |
+| `app/Models/MarketAnalysis.php` | **UPDATE** — relasi `demographics()` |
+
+> [!IMPORTANT]
+> File `018_schema_patch_audit.sql` perlu dieksekusi manual di **Supabase SQL Editor** karena kita tidak menggunakan Laravel Migrations untuk Supabase.

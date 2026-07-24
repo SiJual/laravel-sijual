@@ -51,4 +51,9 @@ class MarketAnalysis extends Model
     {
         return $this->hasMany(Competitor::class, 'analysis_id');
     }
+
+    public function demographics(): HasMany
+    {
+        return $this->hasMany(Demographic::class, 'analysis_id');
+    }
 }

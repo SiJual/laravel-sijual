@@ -23,12 +23,20 @@ class Report extends Model
         'period_end',
         'data',
         'file_url',
+        'total_income',
+        'total_expense',
+        'net_profit',
+        'transaction_count',
     ];
 
     protected $casts = [
         'period_start' => 'date',
         'period_end' => 'date',
         'data' => 'array',
+        'total_income' => 'integer',
+        'total_expense' => 'integer',
+        'net_profit' => 'integer',
+        'transaction_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
