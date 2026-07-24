@@ -40,64 +40,64 @@
 > **Sprint 1** | **Target: Minggu 2** | **~28 SP**
 
 ### Definition of Done — Phase 2
-- [ ] Semua tabel Supabase PostgreSQL terbuat sesuai ERD
-- [ ] RLS policies aktif pada semua tabel tenant
-- [ ] Login / Register / Logout berfungsi via Supabase Auth
-- [ ] Google OAuth login berfungsi
-- [ ] Auth middleware Laravel memvalidasi Supabase JWT
-- [ ] Profil UMKM & Outlet bisa dibuat dan diedit
+- [x] Semua tabel Supabase PostgreSQL terbuat sesuai ERD
+- [x] RLS policies aktif pada semua tabel tenant
+- [x] Login / Register / Logout berfungsi via Supabase Auth
+- [x] Google OAuth login berfungsi
+- [x] Auth middleware Laravel memvalidasi Supabase JWT
+- [x] Profil UMKM & Outlet bisa dibuat dan diedit
 
 ### Tasks
 
 #### Database (N)
-- [ ] **(N)** Buat SQL migration: `001_create_users_table.sql`
-- [ ] **(N)** Buat SQL migration: `002_create_umkm_profiles_table.sql`
-- [ ] **(N)** Buat SQL migration: `003_create_outlets_table.sql`
-- [ ] **(N)** Buat SQL migration: `004_create_categories_table.sql`
-- [ ] **(N)** Buat SQL migration: `005_create_transactions_table.sql`
-- [ ] **(N)** Buat SQL migration: `006_create_reports_table.sql`
-- [ ] **(N)** Buat SQL migration: `007_create_market_analyses_table.sql`
-- [ ] **(N)** Buat SQL migration: `008_create_competitors_table.sql`
-- [ ] **(N)** Buat SQL migration: `009_create_demographics_table.sql`
-- [ ] **(N)** Buat SQL migration: `010_create_content_assets_table.sql`
-- [ ] **(N)** Buat SQL migration: `011_create_publish_jobs_table.sql`
-- [ ] **(N)** Buat SQL migration: `012_create_invites_table.sql`
-- [ ] **(N)** Buat SQL migration: `013_create_products_table.sql`
-- [ ] **(N)** Buat SQL migration: `014_create_indexes.sql` (composite indexes)
-- [ ] **(N)** Buat SQL migration: `015_create_rls_policies.sql`
-- [ ] **(N)** Buat SQL migration: `016_seed_default_categories.sql`
-- [ ] **(N)** Jalankan semua migration di Supabase SQL Editor
+- [x] **(N)** Buat SQL migration: `001_create_users_table.sql`
+- [x] **(N)** Buat SQL migration: `002_create_umkm_profiles_table.sql`
+- [x] **(N)** Buat SQL migration: `003_create_outlets_table.sql`
+- [x] **(N)** Buat SQL migration: `004_create_categories_table.sql`
+- [x] **(N)** Buat SQL migration: `005_create_transactions_table.sql`
+- [x] **(N)** Buat SQL migration: `006_create_reports_table.sql`
+- [x] **(N)** Buat SQL migration: `007_create_market_analyses_table.sql`
+- [x] **(N)** Buat SQL migration: `008_create_competitors_table.sql`
+- [x] **(N)** Buat SQL migration: `009_create_demographics_table.sql`
+- [x] **(N)** Buat SQL migration: `010_create_content_assets_table.sql`
+- [x] **(N)** Buat SQL migration: `011_create_publish_jobs_table.sql`
+- [x] **(N)** Buat SQL migration: `012_create_invites_table.sql`
+- [x] **(N)** Buat SQL migration: `013_create_products_table.sql`
+- [x] **(N)** Buat SQL migration: `014_create_indexes.sql` (composite indexes)
+- [x] **(N)** Buat SQL migration: `015_create_rls_policies.sql`
+- [x] **(N)** Buat SQL migration: `016_seed_default_categories.sql`
+- [x] **(N)** Jalankan semua migration di Supabase SQL Editor
 
 #### Authentication (F + N)
-- [ ] **(N)** Buat `SupabaseAuthService.php` (signIn, signUp, signOut, getUser)
-- [ ] **(F)** Buat `SupabaseAuth` middleware (validate JWT dari session)
-- [ ] **(F)** Buat custom Auth Guard untuk Supabase
-- [ ] **(F)** Konfigurasi `config/auth.php` untuk Supabase guard
-- [ ] **(N)** Buat `GoogleAuthController.php` (redirect + callback via Supabase)
-- [ ] **(F)** Buat `LoginController.php` (show + store + destroy)
-- [ ] **(F)** Buat `RegisterController.php` (show + store)
-- [ ] **(F)** Buat `ForgotPasswordController.php` (show + store)
+- [x] **(N)** Buat `SupabaseAuthService.php` (signIn, signUp, signOut, getUser)
+- [x] **(F)** Buat `SupabaseAuth` middleware (validate JWT dari session)
+- [x] **(F)** Buat custom Auth Guard untuk Supabase
+- [x] **(F)** Konfigurasi `config/auth.php` untuk Supabase guard
+- [x] **(N)** Buat `GoogleAuthController.php` (redirect + callback via Supabase)
+- [x] **(F)** Buat `LoginController.php` (show + store + destroy)
+- [x] **(F)** Buat `RegisterController.php` (show + store)
+- [x] **(F)** Buat `ForgotPasswordController.php` (show + store)
 
 #### Auth UI — Blade Views (F)
-- [ ] **(F)** Buat `auth/login.blade.php` — sesuai Figma 2:2 (desktop split layout)
+- [x] **(F)** Buat `auth/login.blade.php` — sesuai Figma 2:2 (desktop split layout)
   - Left panel: Logo, "Selamat Datang di SiJual", form fields, CTA
   - Right panel: Glassmorphism hero card + "Modern Nusantara Commerce"
-- [ ] **(F)** Buat `auth/register.blade.php` — sesuai Figma 2:269 (mobile)
-- [ ] **(F)** Buat `auth/forgot-password.blade.php`
-- [ ] **(F)** Indonesian error messages untuk semua form validation
+- [x] **(F)** Buat `auth/register.blade.php` — sesuai Figma 2:269 (mobile)
+- [x] **(F)** Buat `auth/forgot-password.blade.php`
+- [x] **(F)** Indonesian error messages untuk semua form validation
 
 #### Profile & Onboarding (N)
-- [ ] **(N)** Buat Eloquent Models: User, UmkmProfile, Outlet
-- [ ] **(N)** Buat `ProfileController.php` (edit, update, onboarding)
-- [ ] **(N)** Buat `OutletController.php` (CRUD)
-- [ ] **(N)** Buat `EnsureProfileComplete` middleware
-- [ ] **(N)** Buat `CheckRole` middleware (RBAC: owner, staff, viewer)
-- [ ] **(F)** Buat `onboarding/profile-setup.blade.php` — sesuai Figma 2:416
-- [ ] **(F)** Buat `profile/edit.blade.php`
+- [x] **(N)** Buat Eloquent Models: User, UmkmProfile, Outlet
+- [x] **(N)** Buat `ProfileController.php` (edit, update, onboarding)
+- [x] **(N)** Buat `OutletController.php` (CRUD)
+- [x] **(N)** Buat `EnsureProfileComplete` middleware
+- [x] **(N)** Buat `CheckRole` middleware (RBAC: owner, staff, viewer)
+- [x] **(F)** Buat `onboarding/profile-setup.blade.php` — sesuai Figma 2:416
+- [x] **(F)** Buat `profile/edit.blade.php`
 
 #### Routes
-- [ ] **(F)** Setup `routes/web.php` — Guest routes (login, register, Google OAuth)
-- [ ] **(N)** Setup `routes/web.php` — Authenticated routes (onboarding, dashboard, profile)
+- [x] **(F)** Setup `routes/web.php` — Guest routes (login, register, Google OAuth)
+- [x] **(N)** Setup `routes/web.php` — Authenticated routes (onboarding, dashboard, profile)
 
 ---
 
@@ -105,48 +105,48 @@
 > **Sprint 2** | **Target: Minggu 3** | **~27 SP**
 
 ### Definition of Done — Phase 3
-- [ ] SideNavBar, TopAppBar, BottomNavBar berfungsi dan responsive
-- [ ] Dashboard Hub menampilkan data placeholder yang benar
-- [ ] Navigasi antar modul (Hub → SiKas → SiPasar → SiPromo → SiStok) berfungsi
-- [ ] Outlet selector di sidebar berfungsi
-- [ ] Mobile responsive breakpoints benar (375px, 768px, 1280px)
+- [x] SideNavBar, TopAppBar, BottomNavBar berfungsi dan responsive
+- [x] Dashboard Hub menampilkan data placeholder yang benar
+- [x] Navigasi antar modul (Hub → SiKas → SiPasar → SiPromo → SiStok) berfungsi
+- [x] Outlet selector di sidebar berfungsi
+- [x] Mobile responsive breakpoints benar (375px, 768px, 1280px)
 
 ### Tasks
 
 #### Shared Components (F)
-- [ ] **(F)** Buat `components/navigation/side-nav-bar.blade.php`
+- [x] **(F)** Buat `components/navigation/side-nav-bar.blade.php`
   - Logo SiJual + "MSME Command Center"
   - "+ New Transaction" CTA button
   - Nav items: SiJual Hub, SiKas, SiPasar, SiPromo, SiStok
   - Active state: left border indicator (4px #9D3D2B)
   - Bottom: Settings + Support links
-- [ ] **(F)** Buat `components/navigation/top-app-bar.blade.php`
+- [x] **(F)** Buat `components/navigation/top-app-bar.blade.php`
   - Search bar (rounded-full, bg-surface-alt)
   - Notification bell (with red dot badge)
   - User avatar/icon
-- [ ] **(F)** Buat `components/navigation/bottom-nav-bar.blade.php`
+- [x] **(F)** Buat `components/navigation/bottom-nav-bar.blade.php`
   - Mobile only: Hub / SiKas / SiPasar / SiPromo tabs
   - Active tab highlight
-- [ ] **(F)** Buat `components/ui/stat-card.blade.php`
+- [x] **(F)** Buat `components/ui/stat-card.blade.php`
   - Variants: SiKas (Penjualan), SiPasar (Market Score), SiPromo (Active Campaigns)
   - Icon circle, title, value, sub-indicator
-- [ ] **(F)** Buat `components/ui/transaction-list-item.blade.php`
+- [x] **(F)** Buat `components/ui/transaction-list-item.blade.php`
   - Icon circle (Income: green bg, Expense: muted bg)
   - Transaction name + category tag
   - Amount (+ green / - dark) + time
-- [ ] **(F)** Buat `components/ui/market-alert-card.blade.php`
+- [x] **(F)** Buat `components/ui/market-alert-card.blade.php`
   - Icon + Title + Description body
   - Variants: Demand Spike, Promo Suggestion
-- [ ] **(F)** Buat `components/form/input.blade.php`, `button.blade.php`, `select.blade.php`
+- [x] **(F)** Buat `components/form/input.blade.php`, `button.blade.php`, `select.blade.php`
 
 #### Hub Dashboard (N)
-- [ ] **(N)** Buat `HubController.php` (index + stats API)
-- [ ] **(N)** Buat `hub/dashboard.blade.php` — sesuai Figma 2:58
+- [x] **(N)** Buat `HubController.php` (index + stats API)
+- [x] **(N)** Buat `hub/dashboard.blade.php` — sesuai Figma 2:58
   - Welcome Section: "Halo, {business_name}" + health badge
   - Quick Stats Grid (3 bento cards): SiKas, SiPasar, SiPromo
   - Activity Feed: Recent Transactions (2/3 width) + Market Alerts (1/3 width)
-- [ ] **(N)** Query Supabase untuk summary data (revenue, market score, active campaigns)
-- [ ] **(N)** Buat mobile variant hub dashboard — sesuai Figma 2:1338
+- [x] **(N)** Query Supabase untuk summary data (revenue, market score, active campaigns)
+- [x] **(N)** Buat mobile variant hub dashboard — sesuai Figma 2:1338
 
 ---
 
