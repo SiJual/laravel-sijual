@@ -17,12 +17,14 @@
         <x-navigation.side-nav-bar :active="$activeNav ?? ''" />
 
         {{-- Main area --}}
-        <div class="flex-1 pl-64">
+        <div class="flex-1 pl-0 lg:pl-64 flex flex-col h-screen overflow-hidden">
             {{-- Top App Bar --}}
-            <x-navigation.top-app-bar />
+            @if(!isset($hideTopBar) || !$hideTopBar)
+                <x-navigation.top-app-bar />
+            @endif
 
             {{-- Page Content --}}
-            <main class="pt-16 min-h-screen">
+            <main class="{{ (isset($hideTopBar) && $hideTopBar) ? '' : 'pt-16' }} flex-1 flex flex-col relative bg-[#FCFBFB] overflow-hidden">
                 {{ $slot }}
             </main>
         </div>

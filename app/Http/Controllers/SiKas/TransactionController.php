@@ -90,6 +90,59 @@ class TransactionController extends Controller
         return back()->with('success', 'Transaksi berhasil dicatat!');
     }
 
+    public function show(string $id): \Illuminate\Http\JsonResponse
+    {
+        $userSession = session('supabase_user');
+        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+
+        $transaction = Transaction::where('umkm_id', $profile->id)
+            ->with(['category', 'outlet'])
+            ->where('id', $id)
+            ->firstOrFail();
+
+        return response()->json($transaction);
+    }
+
+    public function update(Request $request, string $id): RedirectResponse
+    {
+        $userSession = session('supabase_user');
+        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+
+        $transaction = Transaction::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
+
+        $request->validate([
+            'type'             => 'required|in:income,expense',
+            'amount'           => 'required|numeric|min:1',
+            'description'      => 'nullable|string|max:500',
+            'category_id'      => 'required|string',
+            'transaction_date' => 'required|date',
+            'payment_method'   => 'nullable|string|max:50',
+            'notes'            => 'nullable|string|max:1000',
+        ]);
+
+        // Verify category ownership
+        $category = Category::where('id', $request->category_id)
+            ->where(function ($q) use ($profile) {
+                $q->where('is_system', true)->orWhere('umkm_id', $profile->id);
+            })->first();
+
+        if (!$category) {
+            return back()->withErrors(['category_id' => 'Kategori tidak valid.'])->withInput();
+        }
+
+        $transaction->update([
+            'type'             => $request->type,
+            'amount'           => $request->amount,
+            'description'      => $request->description,
+            'category_id'      => $category->id,
+            'transaction_date' => $request->transaction_date,
+            'payment_method'   => $request->payment_method ?? $transaction->payment_method,
+            'notes'            => $request->notes,
+        ]);
+
+        return back()->with('success', 'Transaksi berhasil diperbarui!');
+    }
+
     public function destroy(string $id): RedirectResponse
     {
         $userSession = session('supabase_user');
