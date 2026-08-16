@@ -7,14 +7,14 @@ use App\Models\Product;
 use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $query = Product::where('umkm_id', $profile->id);
 
@@ -53,8 +53,7 @@ class ProductController extends Controller
             'image_url' => 'nullable|url|max:2048',
         ]);
 
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $threshold = 5;
         $status = $request->stock_level == 0 ? 'out_of_stock' : ($request->stock_level <= $threshold ? 'low_stock' : 'in_stock');
@@ -76,8 +75,7 @@ class ProductController extends Controller
 
     public function destroy(string $id): RedirectResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $product = Product::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
         $product->delete();

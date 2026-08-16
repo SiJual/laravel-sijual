@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UmkmProfile;
 use App\Services\Payment\QrisSyncService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class QrisSyncController extends Controller
 {
@@ -13,8 +14,7 @@ class QrisSyncController extends Controller
 
     public function sync(): JsonResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $result = $this->qrisService->syncQrisTransactions($profile->id);
 

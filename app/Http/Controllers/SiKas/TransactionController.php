@@ -10,14 +10,14 @@ use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
     public function index(Request $request): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $query = Transaction::where('umkm_id', $profile->id)->with(['category', 'outlet']);
 
@@ -52,8 +52,7 @@ class TransactionController extends Controller
 
     public function store(TransactionRequest $request): RedirectResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $outlet = null;
         if ($request->outlet_id) {
@@ -92,8 +91,7 @@ class TransactionController extends Controller
 
     public function destroy(string $id): RedirectResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $transaction = Transaction::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
         $transaction->delete();

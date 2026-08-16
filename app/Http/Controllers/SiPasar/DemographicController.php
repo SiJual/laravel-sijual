@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\MarketAnalysis;
 use App\Models\UmkmProfile;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class DemographicController extends Controller
 {
     public function index(string $analysisId): JsonResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $analysis = MarketAnalysis::where('umkm_id', $profile->id)->where('id', $analysisId)->firstOrFail();
 

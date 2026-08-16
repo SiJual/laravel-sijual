@@ -5,14 +5,14 @@ namespace App\Http\Controllers\SiPromo;
 use App\Http\Controllers\Controller;
 use App\Models\ContentAsset;
 use App\Models\UmkmProfile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ContentController extends Controller
 {
     public function index(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $recentGenerations = ContentAsset::where('umkm_id', $profile->id)
             ->latest()
@@ -28,8 +28,7 @@ class ContentController extends Controller
 
     public function preview(string $id): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $content = ContentAsset::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
 
@@ -42,8 +41,7 @@ class ContentController extends Controller
 
     public function history(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $contents = ContentAsset::where('umkm_id', $profile->id)->latest()->paginate(12);
 

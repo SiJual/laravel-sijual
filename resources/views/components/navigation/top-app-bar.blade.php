@@ -15,8 +15,28 @@
             </svg>
             <span class="absolute top-1.5 right-1.5 size-2 bg-error rounded-full"></span>
         </button>
-        <div class="size-9 rounded-full bg-primary-light text-primary font-semibold flex items-center justify-center text-sm">
-            UM
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" @click.outside="open = false"
+                    class="size-9 rounded-full bg-primary-light text-primary font-semibold flex items-center justify-center text-sm uppercase">
+                {{ \Illuminate\Support\Str::substr(auth()->user()->full_name ?? auth()->user()->email, 0, 2) }}
+            </button>
+
+            <div x-show="open" x-cloak x-transition
+                 class="absolute right-0 mt-2 w-56 bg-surface border border-border rounded-lg shadow-lg py-2 z-50">
+                <div class="px-4 py-2 border-b border-border">
+                    <p class="text-sm font-semibold text-on-surface truncate">{{ auth()->user()->full_name ?? 'Pengguna' }}</p>
+                    <p class="text-xs text-on-surface-variant truncate">{{ auth()->user()->email }}</p>
+                </div>
+                <a href="{{ route('profile.edit') }}"
+                   class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-alt">Profil Usaha</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                            class="w-full text-left px-4 py-2 text-sm text-error hover:bg-surface-alt">
+                        Keluar
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </header>

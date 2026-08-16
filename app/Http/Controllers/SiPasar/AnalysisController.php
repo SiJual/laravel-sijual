@@ -11,6 +11,7 @@ use App\Services\Market\BPSDataService;
 use App\Services\Market\CompetitorScraperService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class AnalysisController extends Controller
@@ -23,8 +24,7 @@ class AnalysisController extends Controller
 
     public function index(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $latestAnalysis = MarketAnalysis::where('umkm_id', $profile->id)
             ->with('competitors')
@@ -48,8 +48,7 @@ class AnalysisController extends Controller
             'radius_km.required' => 'Radius analisis wajib diisi.',
         ]);
 
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $lat = $profile->latitude ?? -6.2444;
         $lng = $profile->longitude ?? 106.8006;
@@ -102,8 +101,7 @@ class AnalysisController extends Controller
 
     public function results(string $id): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $analysis = MarketAnalysis::where('umkm_id', $profile->id)
             ->where('id', $id)

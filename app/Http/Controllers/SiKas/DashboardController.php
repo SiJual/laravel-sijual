@@ -8,6 +8,7 @@ use App\Models\Outlet;
 use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use App\Services\AI\FinancialInsightService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -16,8 +17,7 @@ class DashboardController extends Controller
 
     public function index(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $transactions = Transaction::where('umkm_id', $profile->id)
             ->with(['category', 'outlet'])

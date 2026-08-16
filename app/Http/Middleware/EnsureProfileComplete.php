@@ -5,19 +5,18 @@ namespace App\Http\Middleware;
 use App\Models\UmkmProfile;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureProfileComplete
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = session('supabase_user');
-
-        if (!$user) {
+        if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        $profile = UmkmProfile::where('user_id', $user['id'])->first();
+        $profile = UmkmProfile::where('user_id', Auth::id())->first();
 
         if (!$profile || $profile->profile_completeness < 100) {
             return redirect()->route('onboarding')->with('warning', 'Silakan lengkapi profil usaha Anda terlebih dahulu.');

@@ -23,7 +23,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // === AUTHENTICATED ROUTES ===
-Route::middleware(['auth.supabase'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // Onboarding
     Route::get('/onboarding', [ProfileController::class, 'onboarding'])->name('onboarding');

@@ -46,3 +46,8 @@ Homestead.yaml
 # Testing & Cache
 /.phpunit.cache
 .phpunit.result.cache
+
+# neon
+/.neon
+/skills-lock.json
+/.agents

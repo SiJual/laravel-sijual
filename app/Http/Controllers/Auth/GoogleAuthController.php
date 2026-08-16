@@ -4,61 +4,42 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\Supabase\SupabaseAuthService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
-    public function __construct(private SupabaseAuthService $auth) {}
-
     public function redirect(): RedirectResponse
     {
-        $codeVerifier = bin2hex(random_bytes(32));
-        session(['supabase_code_verifier' => $codeVerifier]);
-        
-        $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
-        
-        $redirectUrl = route('auth.google.callback');
-        return redirect()->away($this->auth->getGoogleOAuthUrl($redirectUrl, $codeChallenge));
+        return Socialite::driver('google')->redirect();
     }
 
-    public function callback(Request $request): RedirectResponse
+    public function callback(): RedirectResponse
     {
-        $code = $request->query('code');
-        $codeVerifier = session('supabase_code_verifier');
-
-        if (!$code || !$codeVerifier) {
-            return redirect()->route('login')->with('error', 'Autentikasi Google dibatalkan atau sesi kadaluarsa.');
-        }
-
         try {
-            $result = $this->auth->exchangeCodeForSession($code, $codeVerifier);
+            $googleUser = Socialite::driver('google')->user();
 
-            if (isset($result['user'])) {
-                $user = User::firstOrCreate(
-                    ['id' => $result['user']['id']],
-                    [
-                        'email' => $result['user']['email'],
-                        'full_name' => $result['user']['user_metadata']['full_name'] ?? $result['user']['email'],
-                        'avatar_url' => $result['user']['user_metadata']['avatar_url'] ?? null,
-                        'role' => 'owner',
-                    ]
-                );
-                
-                \Illuminate\Support\Facades\Auth::login($user);
-            }
+            $user = User::firstOrCreate(
+                ['email' => $googleUser->getEmail()],
+                [
+                    'full_name' => $googleUser->getName() ?? $googleUser->getEmail(),
+                    'avatar_url' => $googleUser->getAvatar(),
+                    'role' => 'owner',
+                    'password' => Hash::make(Str::random(32)),
+                ]
+            );
 
-            session([
-                'supabase_access_token' => $result['access_token'],
-                'supabase_refresh_token' => $result['refresh_token'],
-                'supabase_user' => $result['user'],
-            ]);
+            Auth::login($user);
 
             return redirect()->route('dashboard');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Google Auth Error: ' . $e->getMessage());
-            return redirect()->route('login')->with('error', 'Gagal masuk dengan Google. Error: ' . $e->getMessage());
+            Log::error('Google Auth Error: ' . $e->getMessage());
+
+            return redirect()->route('login')->with('error', 'Gagal masuk dengan Google. Silakan coba lagi.');
         }
     }
 }

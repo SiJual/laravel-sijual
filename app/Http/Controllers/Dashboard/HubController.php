@@ -8,14 +8,14 @@ use App\Models\MarketAnalysis;
 use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class HubController extends Controller
 {
     public function index(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->first();
+        $profile = UmkmProfile::where('user_id', Auth::id())->first();
 
         $totalRevenue = Transaction::where('umkm_id', $profile->id)
             ->where('type', 'income')
@@ -49,10 +49,7 @@ class HubController extends Controller
 
     public function stats(): JsonResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->first();
-
-
+        $profile = UmkmProfile::where('user_id', Auth::id())->first();
 
         $income = Transaction::where('umkm_id', $profile->id)->where('type', 'income')->sum('amount');
         $expense = Transaction::where('umkm_id', $profile->id)->where('type', 'expense')->sum('amount');

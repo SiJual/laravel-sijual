@@ -7,6 +7,7 @@ use App\Models\Outlet;
 use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OutletController extends Controller
 {
@@ -17,8 +18,7 @@ class OutletController extends Controller
             'address' => 'nullable|string',
         ]);
 
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         Outlet::create([
             'umkm_id' => $profile->id,
@@ -32,8 +32,7 @@ class OutletController extends Controller
 
     public function destroy(string $id): RedirectResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $outlet = Outlet::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
 

@@ -7,14 +7,14 @@ use App\Models\Outlet;
 use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     public function onboarding(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->first();
+        $profile = UmkmProfile::where('user_id', Auth::id())->first();
 
         return view('onboarding.profile-setup', compact('profile'));
     }
@@ -37,10 +37,8 @@ class ProfileController extends Controller
             'phone.required' => 'Nomor telepon/WhatsApp wajib diisi.',
         ]);
 
-        $userSession = session('supabase_user');
-
         $profile = UmkmProfile::updateOrCreate(
-            ['user_id' => $userSession['id']],
+            ['user_id' => Auth::id()],
             [
                 'business_name' => strip_tags($request->business_name),
                 'business_type' => $request->business_type,
@@ -67,8 +65,7 @@ class ProfileController extends Controller
 
     public function edit(): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         return view('profile.edit', compact('profile'));
     }
@@ -84,8 +81,7 @@ class ProfileController extends Controller
             'phone' => 'required|string|max:20',
         ]);
 
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $sanitizedData = $request->only([
             'business_type',

@@ -9,6 +9,7 @@ use App\Models\UmkmProfile;
 use App\Services\AI\CaptionGeneratorService;
 use App\Services\AI\FluxSchnellService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class GenerateController extends Controller
 {
@@ -19,8 +20,7 @@ class GenerateController extends Controller
 
     public function create(ContentRequest $request): RedirectResponse
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $aiResult = $this->captionService->generate($profile->business_name, $request->prompt, $request->content_type);
         $imageUrl = $this->fluxService->generateImage($request->prompt);

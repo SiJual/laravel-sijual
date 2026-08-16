@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Services\Supabase\SupabaseAuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class ForgotPasswordController extends Controller
 {
-    public function __construct(private SupabaseAuthService $auth) {}
-
     public function show(): View
     {
         return view('auth.forgot-password');
@@ -26,11 +24,12 @@ class ForgotPasswordController extends Controller
             'email.email' => 'Format email tidak valid.',
         ]);
 
-        try {
-            $this->auth->resetPassword($request->email);
+        $status = Password::sendResetLink($request->only('email'));
+
+        if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', 'Tautan pemulihan kata sandi telah dikirim ke email Anda.');
-        } catch (\Exception $e) {
-            return back()->withErrors(['email' => 'Gagal mengirim email pemulihan.']);
         }
+
+        return back()->withErrors(['email' => 'Gagal mengirim email pemulihan.']);
     }
 }

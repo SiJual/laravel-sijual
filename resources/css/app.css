@@ -36,3 +36,7 @@
     --radius-lg: 12px;
     --radius-full: 9999px;
 }
+
+[x-cloak] {
+    display: none !important;
+}

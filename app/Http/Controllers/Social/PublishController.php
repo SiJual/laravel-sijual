@@ -8,6 +8,7 @@ use App\Services\Social\PublishSchedulerService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PublishController extends Controller
 {
@@ -52,8 +53,7 @@ class PublishController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $userSession = session('supabase_user');
-        $profile = \App\Models\UmkmProfile::where('user_id', $userSession['id'])->first();
+        $profile = \App\Models\UmkmProfile::where('user_id', Auth::id())->first();
 
         if (!$profile) {
             return response()->json(['status' => 'error', 'message' => 'Profil UMKM tidak ditemukan'], 404);
