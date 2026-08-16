@@ -23,7 +23,7 @@
         </div>
 
         {{-- Nav Links --}}
-        <nav class="flex flex-col gap-1 px-2 mt-2">
+        <nav class="flex flex-col gap-1 mt-2">
             <x-navigation.nav-link href="{{ route('dashboard') }}" :active="$active === 'hub'" icon="grid">
                 SiJual Hub
             </x-navigation.nav-link>

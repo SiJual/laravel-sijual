@@ -9,7 +9,7 @@
                 <form action="{{ route('sikas.reports.export') }}" method="POST">
                     @csrf
                     <button type="submit" class="px-4 py-2 bg-primary text-white font-semibold text-sm rounded-md shadow-sm hover:bg-primary/90 transition flex items-center gap-2">
-                        <span>📥 Export CSV / Excel</span>
+                        <span><svg class="size-4 inline-block mr-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Export CSV / Excel</span>
                     </button>
                 </form>
             </div>
@@ -27,17 +27,17 @@
             <x-ui.stat-card
                 title="Total Pemasukan"
                 value="Rp {{ number_format($reportData['total_income'], 0, ',', '.') }}"
-                icon="📥"
+                icon='<svg class="size-6 text-success" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>'
             />
             <x-ui.stat-card
                 title="Total Pengeluaran"
                 value="Rp {{ number_format($reportData['total_expense'], 0, ',', '.') }}"
-                icon="📤"
+                icon='<svg class="size-6 text-error" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>'
             />
             <x-ui.stat-card
                 title="Keuntungan Bersih (Net)"
                 value="Rp {{ number_format($reportData['net_profit'], 0, ',', '.') }}"
-                icon="📊"
+                icon='<svg class="size-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>'
                 trend="{{ $reportData['net_profit'] >= 0 ? 'Surplus' : 'Defisit' }}"
             />
         </div>

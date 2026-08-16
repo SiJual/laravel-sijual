@@ -1,57 +1,46 @@
-# Rencana Perbaikan Tambahan (Missed Items dari final_lists.md)
+# SiPasar UI Redesign (Map-Centric Interface)
 
-Mohon maaf, Anda benar. Pada iterasi sebelumnya saya hanya berfokus pada 12 *checklist* terbawah dan melewatkan poin-poin *Medium Priority* dan catatan spesifik lainnya yang dijabarkan dalam badan dokumen laporan tester Anda. Saya telah membaca ulang laporan tersebut dan merumuskan perbaikan untuk ke-8 poin krusial yang tersisa tanpa terkecuali.
+Berdasarkan keluhan Anda dan referensi gambar yang diberikan, saat ini `SiPasar` hanya menampilkan formulir riset standar berjejer dengan kartu hasil analisis, sehingga membuang potensi UX spasialnya. Sesuai visi awal, halaman ini seharusnya terasa seperti sebuah **"Command Center Spasial"** dengan peta Mapbox yang membentang menutupi seluruh layar (*full-bleed*), sementara komponen *Market Filters* dan *Market Fit Score* melayang (*floating*) di atasnya.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Issue #3 (Auth Provider):** Saat ini seluruh aplikasi membaca *session* `supabase_user` secara manual. Mengubah ini menjadi *Custom User Provider* (agar `auth()->user()` bawaan Laravel berfungsi) adalah praktik terbaik (*best practice*). Saya akan mengimplementasikan `SupabaseUserProvider` yang membaca *session* tersebut, sehingga kita bisa mengembalikan fungsionalitas `auth()->user()` tanpa merusak kode *controller* yang sudah menggunakan *session*.
+> Karena kita mengubah `landing.blade.php` menjadi layar penuh tanpa *scroll* berlebihan (peta sebagai *background*), *layout* dasar aplikasi (`app.blade.php`) perlu saya sesuaikan agar kontainer halamannya bisa mendukung mode *absolute/full-screen map*.
+> Selain itu, karena menggunakan **Mapbox GL JS**, Anda harus mendaftar akun Mapbox secara gratis untuk mendapatkan `MAPBOX_API_KEY` (jika belum punya) yang nantinya harus dipasang di *file* `.env`.
 
 ## Proposed Changes
 
-### 1. [Backend] Fix Auth Provider (Issue #3)
-#### [NEW] [SupabaseUserProvider.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Providers/SupabaseUserProvider.php)
-- Membuat *provider* otentikasi kustom untuk Laravel yang mengambil profil pengguna dari `session('supabase_user')` dan mengembalikan model `User`.
-#### [MODIFY] [AuthServiceProvider.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Providers/AuthServiceProvider.php)
-- Meregistrasikan `SupabaseUserProvider` ke dalam *Auth facade* Laravel.
-#### [MODIFY] [auth.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/config/auth.php)
-- Mengubah konfigurasi *guards/providers* agar menggunakan `supabase` *driver* yang baru dibuat.
+### 1. Konfigurasi Lingkungan (Environment)
+#### [MODIFY] [.env.example](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/.env.example)
+- Menambahkan baris konfigurasi `MAPBOX_API_KEY=` agar developer lain (dan tim *deploy*) tahu bahwa variabel ini wajib diisi.
 
-### 2. [Security] RLS Storage Celah Logika (Issue #11)
-#### [NEW] [019_patch_storage_rls_service.sql](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/database/supabase/019_patch_storage_rls_service.sql)
-- Menambahkan kriteria `OR auth.role() = 'service_role'` pada aturan RLS *Storage* Supabase. Ini memastikan ketika layanan AI *backend* kita mengunggah gambar menggunakan kunci API utama (*Service Role*), manipulasi datanya tidak akan diblokir oleh RLS karena `owner` terdeteksi `NULL`.
+### 2. Modifikasi Layout Global
+#### [MODIFY] [app.blade.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/resources/views/layouts/app.blade.php) (atau [components/layouts/app.blade.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/resources/views/components/layouts/app.blade.php))
+- Menambahkan pengecekan *class* opsional. Jika rutenya adalah SiPasar, *container* utamanya (`<main>`) tidak akan diberi batasan lebar (agar peta bisa mengisi 100% *viewport* dari ujung sidebar sampai ujung layar).
 
-### 3. [Backend] Timezone Desync (Issue #15)
-#### [MODIFY] [PublishController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/Social/PublishController.php)
-- Memaksa parsing waktu penjadwalan agar berpatokan pada zona waktu Indonesia: `Carbon::parse($request->scheduled_at, 'Asia/Jakarta')->setTimezone('UTC');`. Ini memperbaiki masalah sinkronisasi bagi pengguna di WITA/WIT.
+### 3. Rombak Total Halaman SiPasar Landing
+#### [MODIFY] [landing.blade.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/resources/views/sipasar/landing.blade.php)
+- **Mapbox Container**: Membuat div `#map` yang bersifat `absolute inset-0` di belakang semua elemen.
+- **Mapbox JS & CSS**: Menambahkan skrip CDN `mapbox-gl.js` dan CSS-nya secara spesifik di halaman ini (menggunakan stack/push scripts).
+- **Floating Market Filters**: Membungkus form "Lokasi Target Riset" dan "Radius" dalam komponen kartu dengan kelas `absolute top-6 left-6 z-10 w-80 bg-white/95 backdrop-blur shadow-lg rounded-xl`.
+- **Floating Market Fit Score**: Jika `$latestAnalysis` ada, skor tersebut akan dimunculkan dalam kartu kecil di posisi `absolute top-6 right-6 z-10`.
+- **Peta Interaktif (JS)**: Menambahkan skrip inisialisasi Mapbox yang menggunakan `MAPBOX_API_KEY` dari konfigurasi `config('services.mapbox.key')`, lalu memposisikan kamera peta ke titik koordinat terakhir profil/analisis.
 
-### 4. [Backend] Data Desynchronization Outlet (Issue #18)
-#### [MODIFY] [ProfileController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/Profile/ProfileController.php)
-- Menambahkan logika pembaruan (*update*) pada `Outlet` pusat (yang memiliki `is_primary = true`) agar `name` dan `address`-nya tersinkronisasi setiap kali *user* mengedit profil tokonya.
-
-### 5. [Backend] Integer Overflow Product (Issue #19)
-#### [MODIFY] [ProductController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/SiStok/ProductController.php)
-- Mengamankan operasi matematika dari potensi nilai yang sangat besar di *database*: mengubah `selectRaw('SUM(price * stock_level)')` menjadi `selectRaw('CAST(SUM(price * stock_level) AS BIGINT)')`.
-
-### 6. [Backend] Missing Image URL Validation (Issue #20)
-#### [MODIFY] [ProductController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/SiStok/ProductController.php)
-- Menambahkan validasi `'image_url' => 'nullable|url|max:2048'` pada metode `store` dan memasukannya ke dalam operasi `Product::create()` untuk mencegah injeksi *base64 payload*.
-
-### 7. [Backend] Unreachable Code (Issue #21)
-#### [MODIFY] [HubController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/Dashboard/HubController.php)
-- Menghapus pembungkus blok *if* `if ($profile)` yang berlebihan. Hal ini lantaran rute tersebut sudah dilindungi *middleware* `profile.complete` yang memberikan jaminan 100% bahwa `$profile` selalu ada.
-
-### 8. [Backend] Hardcoded Fake UI State (Issue #22)
-#### [MODIFY] [HubController.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/app/Http/Controllers/Dashboard/HubController.php)
-- Mengubah kondisi patokan skor *hardcode* 85 (`$latestMarketScore = $latestAnalysis ? ... : 85`) menjadi `null` atau `0`. Ini menghilangkan status palsu/bodong jika UMKM belum pernah melakukan riset pasar SiPasar sama sekali.
+### 4. Tambah Konfigurasi Layanan Eksternal
+#### [MODIFY] [config/services.php](file:///c:/Kuliah/Programming/%21%20Hackathon/sijual/config/services.php)
+- Mendaftarkan *key* mapbox:
+  ```php
+  'mapbox' => [
+      'key' => env('MAPBOX_API_KEY'),
+  ],
+  ```
 
 ## Verification Plan
 
 ### Automated Tests
-- Menjalankan `php artisan test` lagi, namun saya sadar bahwa driver `sqlite` absen pada sistem operasi lokal Anda. Jadi verifikasi akan bergantung pada pengamatan logika kode (Static Code Analysis).
+- Meninjau ketersediaan struktur DOM baru (`#map`) dan elemen absolut.
 
 ### Manual Verification
-- Anda bisa memverifikasi langsung di Supabase SQL Editor dengan menjalankan skrip `019_`.
-- Mengedit Nama UMKM di menu Profil dan melihat apakah Cabang Pusat di SiKAS ikut berganti nama.
+- Anda perlu menyalin nilai `MAPBOX_API_KEY` ke `.env` lokal Anda lalu me-*refresh* halaman SiPasar untuk melihat secara langsung apakah peta sudah muncul sebagai *background* layar penuh dan formulir riset melayang dengan posisi yang tepat sesuai gambar referensi Anda.
 
-Tolong berikan persetujuan jika Anda merasa rancangan ini sudah akurat, lengkap, dan menjawab kekurangan yang tim tester sampaikan!
+Tolong periksa rencana ini. Jika Anda menyetujui pendekatannya, saya akan segera mengeksekusi semua perubahan *file* tersebut!

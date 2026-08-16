@@ -31,13 +31,20 @@ PROMPT;
             // Fallback calculation
         }
 
-        // Default heuristic score
+        // Default heuristic score if AI fails
+        $baseScore = 75;
         if ($competitorCount <= 2) {
-            return 88;
+            $baseScore = 88;
         } elseif ($competitorCount <= 5) {
-            return 78;
+            $baseScore = 78;
         } else {
-            return 65;
+            $baseScore = 65;
         }
+
+        if ($density === 'Sangat Tinggi') $baseScore += 5;
+        elseif ($density === 'Tinggi') $baseScore += 3;
+        elseif ($density === 'Rendah') $baseScore -= 5;
+
+        return min(100, max(0, $baseScore));
     }
 }

@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'mapbox' => [
+        'key' => env('MAPBOX_API_KEY'),
+    ],
+
 ];

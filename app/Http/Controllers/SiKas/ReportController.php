@@ -33,9 +33,16 @@ class ReportController extends Controller
         ]);
     }
 
-    public function export(Request $request): Response
+    public function export(Request $request)
     {
         $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
+
+        $format = $request->input('format', 'csv');
+        $period = $request->input('period', 'monthly');
+
+        if ($format === 'pdf') {
+            return $this->exportPdf($profile, $period);
+        }
 
         $csv = $this->exportService->exportCsv($profile->id);
         $filename = 'laporan-keuangan-' . date('Y-m-d') . '.csv';
@@ -43,5 +50,21 @@ class ReportController extends Controller
         return response($csv)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    private function exportPdf($profile, string $period)
+    {
+        $reportData = $this->reportService->aggregate($profile->id, $period);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('sikas.report-pdf', [
+            'profile' => $profile,
+            'reportData' => $reportData,
+            'period' => $period,
+            'generatedAt' => now()->format('d M Y, H:i'),
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download('laporan-keuangan-' . $profile->id . '-' . date('Y-m-d') . '.pdf');
     }
 }

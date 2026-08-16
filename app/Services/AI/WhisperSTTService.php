@@ -16,7 +16,7 @@ class WhisperSTTService
      */
     public function transcribe(UploadedFile $audioFile): ?string
     {
-        $apiKey = config('services.openai.key') ?? env('OPENAI_API_KEY');
+        $apiKey = config('ai.whisper.api_key') ?? config('ai.openai.api_key');
 
         if (!$apiKey) {
             Log::error('WhisperSTTService: OPENAI_API_KEY is not set.');
