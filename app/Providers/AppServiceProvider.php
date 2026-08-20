@@ -19,8 +19,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Auth::provider('supabase', function ($app, array $config) {
-            return new \App\Providers\SupabaseUserProvider();
+        \Illuminate\Support\Facades\Auth::extend('jwt-cookie', function ($app, $name, array $config) {
+            return new \App\Auth\JwtGuard(
+                \Illuminate\Support\Facades\Auth::createUserProvider($config['provider']),
+                $app['request'],
+                $app->make(\App\Services\Auth\JwtService::class)
+            );
         });
 
         \Illuminate\Support\Facades\Blade::directive('rupiahShort', function ($expression) {

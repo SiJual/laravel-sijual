@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\Auth\JwtService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    public function __construct(private JwtService $jwt) {}
+
     public function show(): View
     {
         return view('auth.login');
@@ -27,24 +31,24 @@ class LoginController extends Controller
             'password.min' => 'Kata sandi minimal 6 karakter.',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-            $request->session()->regenerate();
+        $user = User::where('email', $request->email)->first();
 
-            return redirect()->route('dashboard');
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->withErrors([
+                'email' => 'Email atau kata sandi salah. Silakan coba lagi.',
+            ])->withInput(['email' => $request->email]);
         }
 
-        return back()->withErrors([
-            'email' => 'Email atau kata sandi salah. Silakan coba lagi.',
-        ])->withInput(['email' => $request->email]);
+        $cookie = $this->jwt->makeCookie($user, $request->boolean('remember'));
+
+        return redirect()->route('dashboard')->withCookie($cookie);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('login')->withCookie($this->jwt->forgetCookie());
     }
 }

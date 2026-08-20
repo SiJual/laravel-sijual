@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\StripTagsMiddleware::class,
         ]);
 
+        $middleware->encryptCookies(except: [
+            'sijual_token',
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'sikas/qris-sync',
         ]);

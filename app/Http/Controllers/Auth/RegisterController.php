@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Auth\JwtService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
+    public function __construct(private JwtService $jwt) {}
+
     public function show(): View
     {
         return view('auth.register');
@@ -40,9 +42,10 @@ class RegisterController extends Controller
             'role' => 'owner',
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        $cookie = $this->jwt->makeCookie($user);
 
-        return redirect()->route('onboarding')->with('success', 'Akun berhasil dibuat. Silakan lengkapi profil usaha Anda.');
+        return redirect()->route('onboarding')
+            ->with('success', 'Akun berhasil dibuat. Silakan lengkapi profil usaha Anda.')
+            ->withCookie($cookie);
     }
 }

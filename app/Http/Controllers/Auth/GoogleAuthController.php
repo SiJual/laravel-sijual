@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Auth\JwtService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -13,6 +13,8 @@ use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
+    public function __construct(private JwtService $jwt) {}
+
     public function redirect(): RedirectResponse
     {
         return Socialite::driver('google')->redirect();
@@ -33,9 +35,9 @@ class GoogleAuthController extends Controller
                 ]
             );
 
-            Auth::login($user);
+            $cookie = $this->jwt->makeCookie($user);
 
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard')->withCookie($cookie);
         } catch (\Exception $e) {
             Log::error('Google Auth Error: ' . $e->getMessage());
 
