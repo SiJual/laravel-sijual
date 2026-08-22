@@ -79,13 +79,36 @@
                 </div>
 
                 <div class="flex-1 max-w-xl relative z-10 w-full">
-                    <h2 class="text-2xl lg:text-[28px] font-serif font-bold text-gray-900 tracking-tight">Input Suara Pintar</h2>
-                    <p class="text-sm lg:text-base text-[#6B5A57] font-medium leading-relaxed mt-2" x-text="statusMessage">
-                        "Tap mikrofon untuk merekam transaksi, bicara dengan bahasa sehari-hari."
-                    </p>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-2xl lg:text-[28px] font-serif font-bold text-gray-900 tracking-tight">Input Suara Pintar</h2>
+                        <span x-show="recording" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse" style="display:none;">
+                            <span class="size-2 rounded-full bg-red-600"></span>
+                            Mendengarkan...
+                        </span>
+                    </div>
+
+                    {{-- Dynamic Realtime Spoken Transcript or Status Message --}}
+                    <div class="mt-2 min-h-[48px] flex items-center">
+                        <template x-if="recording">
+                            <div class="w-full">
+                                <p x-show="liveTranscript" class="text-sm lg:text-base font-bold text-gray-900 bg-[#FAF4F2] px-3.5 py-2 rounded-xl border border-[#BD5B43]/30 shadow-xs inline-block leading-relaxed">
+                                    "<span x-text="liveTranscript"></span><span class="inline-block w-1.5 h-4 ml-1 bg-[#BD5B43] animate-pulse align-middle"></span>"
+                                </p>
+                                <p x-show="!liveTranscript" class="text-sm lg:text-base text-gray-400 italic">
+                                    "Bicara sekarang... (contoh: 'Beli cup kopi 200 ribu tunai')"
+                                </p>
+                            </div>
+                        </template>
+                        <template x-if="!recording">
+                            <p class="text-sm lg:text-base text-[#6B5A57] font-medium leading-relaxed" x-text="statusMessage">
+                                "Tap mikrofon untuk merekam transaksi, bicara dengan bahasa sehari-hari."
+                            </p>
+                        </template>
+                    </div>
+
                     <div class="flex items-center gap-3 mt-4 lg:mt-5">
                         <div class="w-8 h-[3px] rounded-full bg-[#BD5B43] shrink-0"></div>
-                        <span class="text-[#BD5B43] font-bold text-xs tracking-widest uppercase">Catat Transaksi Suara</span>
+                        <span class="text-[#BD5B43] font-bold text-xs tracking-widest uppercase" x-text="recording ? 'Transkrip Realtime Aktif' : 'Catat Transaksi Suara'"></span>
                     </div>
                 </div>
                 
@@ -828,40 +851,101 @@
                 recording: false,
                 loading: false,
                 showConfirm: false,
-                aiResult: { description: '', amount: '', type: 'income', category_id: '', category: '' },
+                liveTranscript: '',
                 statusMessage: '"Tap mikrofon, bicara, lalu konfirmasi transaksimu."',
                 mediaRecorder: null,
+                speechRecognition: null,
                 audioChunks: [],
+                aiResult: { description: '', amount: '', type: 'income', category_id: '', category: '' },
+
+                init() {
+                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (SpeechRec) {
+                        try {
+                            this.speechRecognition = new SpeechRec();
+                            this.speechRecognition.continuous = true;
+                            this.speechRecognition.interimResults = true;
+                            this.speechRecognition.lang = 'id-ID';
+
+                            this.speechRecognition.onresult = (event) => {
+                                let interim = '';
+                                let final = '';
+                                for (let i = 0; i < event.results.length; i++) {
+                                    const transcript = event.results[i][0].transcript;
+                                    if (event.results[i].isFinal) {
+                                        final += transcript + ' ';
+                                    } else {
+                                        interim += transcript;
+                                    }
+                                }
+                                this.liveTranscript = (final + interim).trim();
+                            };
+
+                            this.speechRecognition.onerror = (event) => {
+                                console.log('Speech recognition event:', event.error);
+                            };
+                        } catch (e) {
+                            console.warn('SpeechRecognition initialization notice:', e);
+                        }
+                    }
+                },
 
                 async toggleRecording() {
                     if (this.loading) return;
 
                     if (this.recording) {
-                        this.mediaRecorder.stop();
-                        this.recording = false;
-                        this.statusMessage = 'Memproses rekaman...';
+                        this.stopRecording();
                     } else {
-                        try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            this.audioChunks = [];
-                            this.mediaRecorder = new MediaRecorder(stream);
-
-                            this.mediaRecorder.ondataavailable = (event) => {
-                                if (event.data.size > 0) this.audioChunks.push(event.data);
-                            };
-
-                            this.mediaRecorder.onstop = async () => {
-                                stream.getTracks().forEach(t => t.stop());
-                                await this.processAudio();
-                            };
-
-                            this.mediaRecorder.start();
-                            this.recording = true;
-                            this.statusMessage = 'Merekam... Tekan tombol lagi untuk berhenti.';
-                        } catch (err) {
-                            this.statusMessage = 'Akses mikrofon ditolak. Periksa izin browser Anda.';
-                        }
+                        await this.startRecording();
                     }
+                },
+
+                async startRecording() {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        this.audioChunks = [];
+                        this.liveTranscript = '';
+                        this.mediaRecorder = new MediaRecorder(stream);
+
+                        this.mediaRecorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) this.audioChunks.push(event.data);
+                        };
+
+                        this.mediaRecorder.onstop = async () => {
+                            stream.getTracks().forEach(t => t.stop());
+                            await this.processAudio();
+                        };
+
+                        this.mediaRecorder.start();
+
+                        if (this.speechRecognition) {
+                            try {
+                                this.speechRecognition.start();
+                            } catch (e) {
+                                console.log('Recognition already active');
+                            }
+                        }
+
+                        this.recording = true;
+                        this.statusMessage = 'Mendengarkan... Silakan bicara.';
+                    } catch (err) {
+                        this.statusMessage = 'Akses mikrofon ditolak. Periksa izin browser Anda.';
+                    }
+                },
+
+                stopRecording() {
+                    if (this.mediaRecorder && this.recording) {
+                        this.mediaRecorder.stop();
+                    }
+                    if (this.speechRecognition) {
+                        try {
+                            this.speechRecognition.stop();
+                        } catch (e) {}
+                    }
+                    this.recording = false;
+                    this.statusMessage = this.liveTranscript 
+                        ? `Menganalisis: "${this.liveTranscript}"...` 
+                        : 'Memproses audio dengan AI...';
                 },
 
                 async processAudio() {
@@ -869,6 +953,9 @@
                     const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
                     const formData = new FormData();
                     formData.append('audio', audioBlob, 'voice.webm');
+                    if (this.liveTranscript) {
+                        formData.append('text', this.liveTranscript);
+                    }
                     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
 
                     try {
@@ -891,7 +978,7 @@
                             }
 
                             this.aiResult = {
-                                description: data.description || '',
+                                description: data.description || (this.liveTranscript || ''),
                                 amount: data.amount || 0,
                                 type: data.type || 'income',
                                 category: data.category || '',
