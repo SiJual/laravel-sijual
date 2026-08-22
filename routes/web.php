@@ -43,6 +43,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/reports/export', [App\Http\Controllers\SiKas\ReportController::class, 'export'])->name('reports.export');
             Route::post('/voice-input', [App\Http\Controllers\SiKas\VoiceInputController::class, 'process'])->name('voice')->middleware('throttle:10,1');
             Route::post('/qris-sync', [App\Http\Controllers\SiKas\QrisSyncController::class, 'sync'])->name('qris.sync');
+            Route::post('/categories', [App\Http\Controllers\SiKas\CategoryController::class, 'store'])->name('categories.store');
+            Route::post('/target-cuan', [App\Http\Controllers\SiKas\DashboardController::class, 'updateTargetCuan'])->name('target_cuan.update');
         });
 
         // SiPasar Routes

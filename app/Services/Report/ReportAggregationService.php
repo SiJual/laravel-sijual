@@ -51,6 +51,7 @@ class ReportAggregationService
             'net_profit' => (int) ($income - $expense),
             'transaction_count' => $transactions->count(),
             'category_breakdown' => $breakdown,
+            'transactions' => $transactions,
         ];
     }
 }

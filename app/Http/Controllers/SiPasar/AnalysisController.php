@@ -23,9 +23,9 @@ class AnalysisController extends Controller
         private MarketFitScoreService $scoreService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $latestAnalysis = MarketAnalysis::where('umkm_id', $profile->id)
             ->with('competitors')
@@ -150,10 +150,9 @@ class AnalysisController extends Controller
     /**
      * Audit #16 fix: show all past analysis history.
      */
-    public function history(): View
+    public function history(Request $request): View
     {
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $analyses = MarketAnalysis::where('umkm_id', $profile->id)
             ->withCount('competitors')

@@ -20,28 +20,35 @@ class ReportController extends Controller
 
     public function index(Request $request): View
     {
-        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $period = $request->query('period', 'monthly');
-        $reportData = $this->reportService->aggregate($profile->id, $period);
+        $startDate = $request->filled('start_date') ? \Carbon\Carbon::parse($request->start_date) : null;
+        $endDate = $request->filled('end_date') ? \Carbon\Carbon::parse($request->end_date) : null;
+
+        $reportData = $this->reportService->aggregate($profile->id, $period, $startDate, $endDate);
 
         return view('sikas.reports', [
             'activeNav' => 'sikas',
             'profile' => $profile,
             'period' => $period,
+            'startDate' => $request->start_date,
+            'endDate' => $request->end_date,
             'reportData' => $reportData,
         ]);
     }
 
     public function export(Request $request)
     {
-        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $format = $request->input('format', 'csv');
         $period = $request->input('period', 'monthly');
+        $startDate = $request->filled('start_date') ? \Carbon\Carbon::parse($request->start_date) : null;
+        $endDate = $request->filled('end_date') ? \Carbon\Carbon::parse($request->end_date) : null;
 
         if ($format === 'pdf') {
-            return $this->exportPdf($profile, $period);
+            return $this->exportPdf($profile, $period, $startDate, $endDate);
         }
 
         $csv = $this->exportService->exportCsv($profile->id);
@@ -52,14 +59,16 @@ class ReportController extends Controller
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 
-    private function exportPdf($profile, string $period)
+    private function exportPdf($profile, string $period, ?\Carbon\Carbon $startDate = null, ?\Carbon\Carbon $endDate = null)
     {
-        $reportData = $this->reportService->aggregate($profile->id, $period);
+        $reportData = $this->reportService->aggregate($profile->id, $period, $startDate, $endDate);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('sikas.report-pdf', [
             'profile' => $profile,
             'reportData' => $reportData,
             'period' => $period,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'generatedAt' => now()->format('d M Y, H:i'),
         ]);
 

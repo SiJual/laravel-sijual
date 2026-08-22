@@ -11,16 +11,42 @@ class TransactionRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $txDate = $this->transaction_date;
+        if (empty($txDate)) {
+            $this->merge([
+                'transaction_date' => now()->format('Y-m-d H:i:s'),
+            ]);
+        } else {
+            $cleaned = str_replace('T', ' ', trim($txDate));
+            if (strlen($cleaned) === 10) {
+                $this->merge([
+                    'transaction_date' => $cleaned . ' ' . now()->format('H:i:s'),
+                ]);
+            } elseif (strlen($cleaned) === 16) {
+                $this->merge([
+                    'transaction_date' => $cleaned . ':00',
+                ]);
+            } else {
+                $this->merge([
+                    'transaction_date' => $cleaned,
+                ]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return [
             'type' => 'required|in:income,expense',
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
-            'category_id' => 'nullable|uuid',
-            'outlet_id' => 'nullable|uuid',
+            'category_id' => 'nullable|string',
+            'category_name' => 'nullable|string|max:100',
+            'outlet_id' => 'nullable|string',
             'payment_method' => 'nullable|string|max:50',
-            'transaction_date' => 'required|date',
+            'transaction_date' => 'nullable',
             'notes' => 'nullable|string',
             'source' => 'nullable|in:voice,manual,qris',
         ];

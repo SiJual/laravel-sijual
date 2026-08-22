@@ -30,13 +30,31 @@
             this.mediaRecorder.stop();
         }
     },
-    processVoiceInput() {
-        // Mock / API voice process call
-        setTimeout(() => {
+    async processVoiceInput() {
+        this.transcribing = true;
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'voice.webm');
+        const token = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (token) formData.append('_token', token);
+
+        try {
+            const response = await fetch('/sikas/voice-input', {
+                method: 'POST',
+                body: formData,
+            });
+            const json = await response.json();
+            if (json.status === 'success' && json.data) {
+                this.textPreview = (json.data.type === 'income' ? '+ ' : '- ') + json.data.description + ' (Rp ' + Number(json.data.amount || 0).toLocaleString('id-ID') + ')';
+                this.$dispatch('voice-recognized', json.data);
+            } else {
+                this.textPreview = json.message || 'Gagal memproses suara. Coba lagi.';
+            }
+        } catch (err) {
+            this.textPreview = 'Gagal menghubungi server AI.';
+        } finally {
             this.transcribing = false;
-            this.textPreview = 'Penjualan Kopi Rp 50.000';
-            this.$dispatch('voice-recognized', { text: this.textPreview, amount: 50000, type: 'income', category: 'Penjualan' });
-        }, 1200);
+        }
     }
 }" class="bg-surface border border-border p-5 rounded-lg shadow-card space-y-3">
     <div class="flex items-center justify-between">
@@ -63,5 +81,26 @@
         <template x-if="transcribing">
             <span class="text-primary font-semibold animate-pulse">Memproses AI...</span>
         </template>
+    </div>
+
+    {{-- Quick Direct Confirmation when used outside dashboard --}}
+    <div x-data="{ lastResult: null }" @voice-recognized.window="lastResult = $event.detail" x-show="lastResult" x-transition class="pt-2">
+        <div class="p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-center justify-between">
+            <div class="text-xs">
+                <span class="font-bold text-on-surface" x-text="lastResult?.description"></span>
+                <span class="font-bold text-primary ml-1" x-text="'(Rp ' + Number(lastResult?.amount || 0).toLocaleString('id-ID') + ')'"></span>
+            </div>
+            <form action="{{ route('sikas.transactions.store') }}" method="POST" class="inline flex items-center gap-2">
+                @csrf
+                <input type="hidden" name="source" value="voice">
+                <input type="hidden" name="type" :value="lastResult?.type || 'income'">
+                <input type="hidden" name="amount" :value="lastResult?.amount || 0">
+                <input type="hidden" name="description" :value="lastResult?.description || ''">
+                <input type="hidden" name="category_name" :value="lastResult?.category || ''">
+                <input type="hidden" name="transaction_date" value="{{ date('Y-m-d H:i:s') }}">
+                <button type="button" @click="lastResult = null" class="text-xs text-on-surface-variant hover:text-on-surface">Batal</button>
+                <button type="submit" class="px-3 py-1 bg-primary text-white text-xs font-bold rounded shadow-sm">Simpan</button>
+            </form>
+        </div>
     </div>
 </div>

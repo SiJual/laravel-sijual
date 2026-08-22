@@ -29,12 +29,17 @@ class UmkmProfile extends Model
         'phone',
         'logo_url',
         'profile_completeness',
+        'target_cuan',
+        'target_cuan_period',
+        'financial_settings',
     ];
 
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
         'profile_completeness' => 'integer',
+        'target_cuan' => 'integer',
+        'financial_settings' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

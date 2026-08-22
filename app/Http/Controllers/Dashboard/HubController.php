@@ -8,14 +8,15 @@ use App\Models\MarketAnalysis;
 use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class HubController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $profile = UmkmProfile::where('user_id', Auth::id())->first();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->first();
 
         $totalRevenue = Transaction::where('umkm_id', $profile->id)
             ->where('type', 'income')

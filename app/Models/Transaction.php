@@ -36,7 +36,7 @@ class Transaction extends Model
         'amount' => 'integer',
         'is_verified' => 'boolean',
         'ai_metadata' => 'array',
-        'transaction_date' => 'date',
+        'transaction_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

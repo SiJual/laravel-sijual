@@ -79,8 +79,28 @@
             </tr>
         </table>
 
+        @if(!empty($reportData['category_breakdown']))
+            <div class="section-title">Rincian Per Kategori</div>
+            <table width="100%" style="border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #FAF0EE; color: #9D3D2B;">
+                        <th style="padding: 6px 10px; text-align: left;">Nama Kategori</th>
+                        <th style="padding: 6px 10px; text-align: right;">Total Akumulasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($reportData['category_breakdown'] as $cat => $total)
+                    <tr style="border-bottom: 1px solid #F2E8E5;">
+                        <td style="padding: 6px 10px; color: #333;">{{ $cat }}</td>
+                        <td style="padding: 6px 10px; text-align: right; font-weight: 700; color: #1a1a1a;">Rp {{ number_format($total, 0, ',', '.') }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+
         @if(!empty($reportData['transactions']))
-            <div class="section-title">Rincian Transaksi</div>
+            <div class="section-title">Daftar Transaksi</div>
             <table width="100%" style="border-collapse: collapse; font-size: 11px;">
                 <thead>
                     <tr style="background: #9D3D2B; color: white;">

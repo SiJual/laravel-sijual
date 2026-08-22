@@ -14,7 +14,7 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $query = Product::where('umkm_id', $profile->id);
 
@@ -28,9 +28,18 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(10);
 
-        $totalProducts = Product::where('umkm_id', $profile->id)->count();
-        $lowStockItems = Product::where('umkm_id', $profile->id)->whereColumn('stock_level', '<=', 'low_stock_threshold')->count();
-        $estValue = Product::where('umkm_id', $profile->id)->selectRaw('CAST(SUM(price * stock_level) AS BIGINT) as val')->value('val') ?? 0;
+        // 1 consolidated query for all dashboard stats
+        $metrics = Product::where('umkm_id', $profile->id)
+            ->selectRaw("
+                COUNT(*) as total_products,
+                COUNT(CASE WHEN stock_level <= low_stock_threshold THEN 1 END) as low_stock_items,
+                COALESCE(SUM(price * stock_level), 0) as est_value
+            ")
+            ->first();
+
+        $totalProducts = (int) ($metrics->total_products ?? 0);
+        $lowStockItems = (int) ($metrics->low_stock_items ?? 0);
+        $estValue = (int) ($metrics->est_value ?? 0);
 
         return view('sistok.index', [
             'activeNav' => 'sistok',
@@ -83,8 +92,7 @@ class ProductController extends Controller
             'image_url'   => 'nullable|url|max:2048',
         ]);
 
-        $userSession = session('supabase_user');
-        $profile = UmkmProfile::where('user_id', $userSession['id'])->firstOrFail();
+        $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $product = Product::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
 
