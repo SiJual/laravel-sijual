@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TransactionRequest;
 use App\Models\Category;
 use App\Models\Outlet;
+use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class TransactionController extends Controller
@@ -19,7 +21,7 @@ class TransactionController extends Controller
     {
         $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
-        $query = Transaction::where('umkm_id', $profile->id)->with(['category', 'outlet']);
+        $query = Transaction::where('umkm_id', $profile->id)->with(['category', 'outlet', 'product']);
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -41,12 +43,16 @@ class TransactionController extends Controller
 
         $outlets = Outlet::where('umkm_id', $profile->id)->get();
 
+        // SiStok catalogue, so a transaction can be booked against a product.
+        $products = Product::where('umkm_id', $profile->id)->orderBy('name')->get();
+
         return view('sikas.transactions', [
             'activeNav' => 'sikas',
             'profile' => $profile,
             'transactions' => $transactions,
             'categories' => $categories,
             'outlets' => $outlets,
+            'products' => $products,
         ]);
     }
 
@@ -85,8 +91,32 @@ class TransactionController extends Controller
                 ->orderBy('sort_order')
                 ->first();
 
+            // Never fall back to another tenant's category — leaving it null
+            // is correct when no system category matches.
             if (!$category) {
-                $category = Category::first();
+                $category = Category::where('umkm_id', $profile->id)
+                    ->where('type', $request->type)
+                    ->first();
+            }
+        }
+
+        // SiStok link: the product must belong to this UMKM.
+        $product = null;
+        $quantity = null;
+        if ($request->filled('product_id')) {
+            $product = Product::where('umkm_id', $profile->id)
+                ->where('id', $request->product_id)
+                ->first();
+
+            if (! $product) {
+                return $this->fail($request, 'Produk yang dipilih tidak ditemukan di SiStok.');
+            }
+
+            $quantity = max(1, (int) ($request->quantity ?? 1));
+
+            // Selling more than what is on the shelf would drive stock negative.
+            if ($request->type === 'income' && $quantity > $product->stock_level) {
+                return $this->fail($request, "Stok {$product->name} tidak mencukupi. Tersisa {$product->stock_level}.");
             }
         }
 
@@ -103,28 +133,43 @@ class TransactionController extends Controller
         }
 
         try {
-            $tx = Transaction::create([
-                'umkm_id' => $profile->id,
-                'outlet_id' => $outlet ? $outlet->id : null,
-                'category_id' => $category ? $category->id : null,
-                'type' => $request->type,
-                'amount' => $request->amount,
-                'description' => $request->description,
-                'notes' => $request->notes,
-                'source' => $request->source ?? 'manual',
-                'payment_method' => $request->payment_method ?? 'cash',
-                'transaction_date' => $txDate,
-            ]);
+            $tx = DB::transaction(function () use ($profile, $outlet, $category, $product, $quantity, $request, $txDate) {
+                $tx = Transaction::create([
+                    'umkm_id' => $profile->id,
+                    'outlet_id' => $outlet ? $outlet->id : null,
+                    'category_id' => $category ? $category->id : null,
+                    'product_id' => $product ? $product->id : null,
+                    'quantity' => $product ? $quantity : null,
+                    'type' => $request->type,
+                    'amount' => $request->amount,
+                    'description' => $request->description,
+                    'notes' => $request->notes,
+                    'source' => $request->source ?? 'manual',
+                    'payment_method' => $request->payment_method ?? 'cash',
+                    'transaction_date' => $txDate,
+                ]);
+
+                // A sale takes stock out, a purchase of the same product puts it back.
+                if ($product) {
+                    $this->moveStock($product, $request->type === 'income' ? -$quantity : $quantity);
+                }
+
+                return $tx;
+            });
+
+            $message = $product
+                ? "Transaksi berhasil dicatat! Stok {$product->name} kini {$product->fresh()->stock_level}."
+                : 'Transaksi berhasil dicatat!';
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Transaksi berhasil dicatat!',
-                    'data' => $tx->load(['category', 'outlet']),
+                    'message' => $message,
+                    'data' => $tx->load(['category', 'outlet', 'product']),
                 ]);
             }
 
-            return back()->with('success', 'Transaksi berhasil dicatat!');
+            return back()->with('success', $message);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Error saving transaction: ' . $e->getMessage());
             if ($request->wantsJson() || $request->ajax()) {
@@ -206,8 +251,50 @@ class TransactionController extends Controller
         $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $transaction = Transaction::where('umkm_id', $profile->id)->where('id', $id)->firstOrFail();
-        $transaction->delete();
+
+        DB::transaction(function () use ($transaction) {
+            // Undo the stock movement this transaction caused.
+            if ($transaction->product_id && $transaction->quantity) {
+                $product = Product::where('id', $transaction->product_id)->first();
+                if ($product) {
+                    $this->moveStock($product, $transaction->type === 'income'
+                        ? $transaction->quantity
+                        : -$transaction->quantity);
+                }
+            }
+
+            $transaction->delete();
+        });
 
         return back()->with('success', 'Transaksi berhasil dihapus.');
+    }
+
+    /**
+     * Apply a signed change to a product's stock and keep its status in sync.
+     */
+    private function moveStock(Product $product, int $delta): void
+    {
+        $newLevel = max(0, $product->stock_level + $delta);
+        $threshold = $product->low_stock_threshold ?? 5;
+
+        $product->update([
+            'stock_level' => $newLevel,
+            'status' => $newLevel === 0
+                ? 'out_of_stock'
+                : ($newLevel <= $threshold ? 'low_stock' : 'in_stock'),
+        ]);
+    }
+
+    /**
+     * Return a failure in the shape the caller expects (JSON for the SPA-ish
+     * forms, a redirect back for plain form posts).
+     */
+    private function fail(Request $request, string $message): RedirectResponse|\Illuminate\Http\JsonResponse
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['status' => 'error', 'message' => $message], 422);
+        }
+
+        return back()->withInput()->withErrors(['product_id' => $message]);
     }
 }

@@ -26,7 +26,7 @@
                           'Menyintesis data kompetitor dengan AI...',
                           'Menyusun skor kelayakan & peta pasar...'
                       ],
-                      query: '{{ old('location_query', 'Jakarta Selatan') }}',
+                      query: '{{ addslashes(old('location_query', $latestAnalysis->location_query ?? trim(($profile->city ?? '') . ', ' . ($profile->province ?? '')))) }}',
                       selectedLat: {{ old('latitude', $latestAnalysis?->latitude ?? ($profile->latitude ?? -6.2444)) }},
                       selectedLng: {{ old('longitude', $latestAnalysis?->longitude ?? ($profile->longitude ?? 106.8006)) }},
                       radiusKm: {{ old('radius_km', 2.5) }},
@@ -78,7 +78,7 @@
                                @input="search()"
                                @focus="open = results.length > 0"
                                @click.outside="open = false"
-                               placeholder="cth. AADK Keputih, atau Jakarta Selatan"
+                               placeholder="cth. Kampung Batik Laweyan, atau nama kota"
                                class="w-full pl-9 pr-3 py-2 bg-white border border-border-input rounded-md text-sm text-on-surface focus:ring-2 focus:ring-primary/20 outline-none" autocomplete="off">
 
                         {{-- Autocomplete Dropdown --}}
@@ -158,12 +158,23 @@
                     </div>
                 </div>
                 <div class="flex-1">
-                    <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-success-bg text-success rounded-sm mb-1">
+                    @php
+                        $score = $latestAnalysis->market_fit_score;
+                        $meta = $latestAnalysis->analysis_data ?? [];
+                        $badge = $score >= 75 ? 'Excellent' : ($score >= 50 ? 'Fair' : 'Perlu Perhatian');
+                        $badgeClass = $score >= 75
+                            ? 'bg-success-bg text-success'
+                            : ($score >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-error/10 text-error');
+                    @endphp
+                    <div class="inline-flex items-center gap-1 px-2 py-0.5 {{ $badgeClass }} rounded-sm mb-1">
                         <svg class="size-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                        <span class="text-[10px] font-bold uppercase tracking-wider">Excellent</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">{{ $badge }}</span>
                     </div>
                     <h3 class="font-bold text-on-surface text-sm">Market Fit</h3>
-                    <p class="text-xs text-on-surface-variant leading-tight mt-0.5">High demand detected in this sector.</p>
+                    <p class="text-xs text-on-surface-variant leading-tight mt-0.5">
+                        {{ \Illuminate\Support\Str::limit($latestAnalysis->location_query, 34) }} &middot;
+                        persaingan {{ $meta['competition_level'] ?? 'belum terukur' }}.
+                    </p>
                 </div>
             </div>
     @endif

@@ -17,7 +17,7 @@
                 @foreach($contents as $item)
                     <x-ui.content-preview-card
                         :title="$item->title"
-                        :type="$item->content_type"
+                        :type="$item->content_type_label"
                         :imageUrl="$item->generated_image_url"
                         :caption="$item->caption"
                         :href="route('sipromo.preview', $item->id)"

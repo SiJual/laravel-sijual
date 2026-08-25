@@ -103,7 +103,14 @@
                                     </div>
 
                                     <div>
-                                        <h4 class="text-sm font-bold text-gray-900 leading-snug">{{ $tx->description ?? 'Transaksi' }}</h4>
+                                        <h4 class="text-sm font-bold text-gray-900 leading-snug">
+                                            {{ $tx->description ?? 'Transaksi' }}
+                                            @if($tx->product)
+                                                <span class="ml-1.5 inline-block px-2 py-0.5 rounded bg-[#FCF0ED] text-[#9D3D2B] text-[10px] font-bold align-middle">
+                                                    {{ $tx->product->name }} &times;{{ $tx->quantity }}
+                                                </span>
+                                            @endif
+                                        </h4>
                                         <p class="text-xs text-gray-500 font-medium mt-0.5">
                                             {{ $tx->type === 'income' ? 'Income' : 'Expense' }} • {{ $tx->category->name ?? 'Umum' }}
                                         </p>
@@ -239,7 +246,39 @@
                     <button @click="showManualModal = false" class="size-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center font-bold text-lg">&times;</button>
                 </div>
 
-                <form action="{{ route('sikas.transactions.store') }}" method="POST" class="space-y-4" x-data="{ txType: 'income', txAmount: '' }">
+                <form action="{{ route('sikas.transactions.store') }}" method="POST" class="space-y-4" x-data="{
+        txType: 'income',
+        txAmount: '',
+        productId: '',
+        quantity: 1,
+        selectedProduct: null,
+        stockAfter: 0,
+        applyProduct() {
+            const id = this.productId;
+            const qtyRaw = this.quantity;
+            const form = this.$root;
+            const select = form ? form.querySelector('select[name=product_id]') : null;
+            const option = select ? [...select.options].find(o => o.value === id) : null;
+
+            if (!id || !option || !option.dataset.price) {
+                this.selectedProduct = null;
+                return;
+            }
+
+            const qty = Math.max(1, parseInt(qtyRaw) || 1);
+            const price = parseInt(option.dataset.price) || 0;
+            const stock = parseInt(option.dataset.stock) || 0;
+
+            this.selectedProduct = option.dataset.name;
+            this.txAmount = price * qty;
+            this.stockAfter = this.txType === 'income' ? stock - qty : stock + qty;
+
+            const description = form.querySelector('input[name=description]');
+            if (description && !description.dataset.touched) {
+                description.value = (this.txType === 'income' ? 'Penjualan ' : 'Pembelian ') + option.dataset.name + ' x' + qty;
+            }
+        }
+    }">
                     @csrf
                     <input type="hidden" name="source" value="manual">
 
@@ -282,7 +321,7 @@
                     {{-- Description --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Deskripsi Transaksi</label>
-                        <input type="text" name="description" required placeholder="Contoh: Penjualan Paket Kopi Espresso"
+                        <input type="text" name="description" required @input="$event.target.dataset.touched = 1" placeholder="Contoh: Penjualan Paket Kopi Espresso"
                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:border-[#9D3D2B] focus:bg-white transition">
                     </div>
 
@@ -325,6 +364,53 @@
                             <input type="text" name="notes" placeholder="Catatan kecil..."
                                    class="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-[#9D3D2B] focus:bg-white transition">
                         </div>
+                    </div>
+
+                    {{-- Alternative input: pull an item straight from SiStok --}}
+                    <div x-effect="applyProduct()"></div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">Atau Pilih dari SiStok</label>
+                            <span class="text-[11px] font-bold text-gray-400">opsional</span>
+                        </div>
+                        <p class="text-[12px] text-gray-500 mb-3 leading-relaxed">
+                            Pilih produk dari katalog SiStok untuk mengisi nominal dan deskripsi otomatis. Stok produk akan ikut menyesuaikan setelah transaksi disimpan.
+                        </p>
+
+                        @if($products->isEmpty())
+                            <p class="text-[12px] text-gray-500">
+                                Belum ada produk di SiStok.
+                                <a href="{{ route('sistok.products.index') }}" class="font-bold text-[#9D3D2B] hover:underline">Tambah produk</a>
+                            </p>
+                        @else
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="sm:col-span-2">
+                                    <select name="product_id" x-model="productId"
+                                            class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#9D3D2B] focus:bg-white transition">
+                                        <option value="">Tanpa produk (isi manual di atas)</option>
+                                        @foreach($products as $prod)
+                                            <option value="{{ $prod->id }}"
+                                                    data-name="{{ $prod->name }}"
+                                                    data-price="{{ $prod->price }}"
+                                                    data-stock="{{ $prod->stock_level }}">
+                                                {{ $prod->name }} — Rp {{ number_format($prod->price, 0, ',', '.') }} (stok {{ $prod->stock_level }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="number" name="quantity" x-model="quantity" min="1" placeholder="Jumlah"
+                                           :disabled="!productId"
+                                           class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#9D3D2B] focus:bg-white transition disabled:bg-gray-100 disabled:text-gray-400">
+                                </div>
+                            </div>
+
+                            <p class="mt-2 text-[11px] font-semibold" x-show="selectedProduct" x-cloak
+                               :class="stockAfter < 0 ? 'text-[#BA1A1A]' : 'text-gray-500'">
+                                <span x-show="txType === 'income'" x-text="'Stok setelah penjualan: ' + stockAfter"></span>
+                                <span x-show="txType === 'expense'" x-text="'Stok setelah pembelian: ' + stockAfter"></span>
+                            </p>
+                        @endif
                     </div>
 
                     {{-- Buttons --}}

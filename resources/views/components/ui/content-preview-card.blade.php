@@ -11,6 +11,17 @@
         <div class="h-44 bg-surface-alt overflow-hidden">
             <img src="{{ $imageUrl }}" alt="{{ $title }}" class="w-full h-full object-cover">
         </div>
+    @else
+        {{-- No poster yet (draft still text-only, or generation skipped the
+             image step) — a placeholder so every card keeps the same shape. --}}
+        <div class="h-44 bg-gradient-to-br from-primary-subtle via-surface-alt to-primary-subtle flex flex-col items-center justify-center gap-2 text-primary/70">
+            <svg class="size-9" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="9" cy="9" r="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 15-5-5-9 9"/>
+            </svg>
+            <span class="text-[11px] font-semibold uppercase tracking-wider">Poster Belum Tersedia</span>
+        </div>
     @endif
     <div class="p-4 space-y-2">
         <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-subtle text-primary">{{ $type }}</span>

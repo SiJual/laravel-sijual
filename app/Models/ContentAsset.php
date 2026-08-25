@@ -41,6 +41,24 @@ class ContentAsset extends Model
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Allowed values for the `content_type` enum column, mapped to the label
+     * shown in the UI.
+     *
+     * @var array<string, string>
+     */
+    public const CONTENT_TYPES = [
+        'social_media' => 'Social Media',
+        'ad_copy' => 'Ad Copy',
+        'blog_post' => 'Blog Post',
+        'email' => 'Email',
+    ];
+
+    public function getContentTypeLabelAttribute(): string
+    {
+        return self::CONTENT_TYPES[$this->content_type] ?? $this->content_type;
+    }
+
     public function umkmProfile(): BelongsTo
     {
         return $this->belongsTo(UmkmProfile::class, 'umkm_id');

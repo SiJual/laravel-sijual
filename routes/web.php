@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/preview/{content}', [App\Http\Controllers\SiPromo\ContentController::class, 'preview'])->name('preview');
             Route::get('/history', [App\Http\Controllers\SiPromo\ContentController::class, 'history'])->name('history');
             Route::post('/generate', [App\Http\Controllers\SiPromo\GenerateController::class, 'create'])->name('generate.create')->middleware('throttle:10,1');
+            Route::delete('/{content}', [App\Http\Controllers\SiPromo\ContentController::class, 'destroy'])->name('destroy');
         });
 
         // SiStok Routes

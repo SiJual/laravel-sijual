@@ -8,63 +8,173 @@
 
 SiJual mengintegrasikan 4 modul utama dalam 1 pusat komando bisnis:
 
-* 🟢 **SiKas** — Pencatatan keuangan pintar berbasis suara (*Speech-to-Text*), kategorisasi otomatis via AI, laporan keuangan real-time, dan rekonsiliasi pembayaran digital QRIS.
-* 🔵 **SiPasar** — Riset pasar geodemografis interaktif berbasis lokasi (*Mapbox*), *scraping* data kompetitor, serta indikator *Market Fit Score* (0-100) menggunakan data BPS & OSM.
-* 🟠 **SiPromo** — Generator konten pemasaran cerdas (teks + gambar via Flux Schnell & Gemini AI) lengkap dengan galeri templat dan opsi publikasi otomatis.
-* 🟤 **SiStok** — Manajemen katalog produk, pemantauan stok, dan sistem peringatan batas minimum inventori.
+* 🟢 **SiKas** — Pencatatan keuangan pintar berbasis suara (*Speech-to-Text* OpenAI Whisper), kategorisasi otomatis via AI, laporan keuangan, dan rekonsiliasi pembayaran digital QRIS.
+* 🔵 **SiPasar** — Riset pasar geodemografis interaktif berbasis lokasi (*Mapbox*), analisis kompetitor via Google Places/OSM, serta *Market Potential Score* menggunakan data BPS.
+* 🟠 **SiPromo** — Generator konten pemasaran (caption + poster via OpenAI `gpt-image-1`) yang di-*grounding* dengan RAG hibrida dan *tool calling* agar klaim tidak dikarang.
+* 🟤 **SiStok** — Manajemen katalog produk, pemantauan stok, dan peringatan batas minimum inventori.
 
 ---
 
-## 🔄 Flow Pengerjaan Proyek
+## 🧱 Arsitektur
 
-Pengembangan proyek ini mengikuti standar dan dokumentasi internal berikut:
+Dua proses aplikasi + satu database, semuanya dijalankan oleh `docker compose`:
 
-1. **`summary.md`** — Acuan *Ringkasan Eksekutif*, *Problem Statement*, dan *Design System / Tokens* (ekstraksi dari Figma).
-2. **`procedure.md`** — *Playbook* & *Rules of Engagement* pelaksanaan task per fase bagi AI Agent dan pengembang.
-3. **`implementation_plan.md`** — Spesifikasi *Arsitektur Teknikal*, *Skema Database Supabase PostgreSQL*, *RLS Policies*, dan *Routing System*.
-4. **`tasks.md`** — Tracking *Checklist Task & Milestones* dari Fase 1 (*Setup*) hingga Fase 10 (*Submission*).
-5. **`revisions.md`** — Catatan *Changelog* dan penyesuaian kebutuhan teknis selama proses pengerjaan.
+```
+                    ┌──────────────────────────────┐
+  Browser  ────────▶│  app  (Laravel 13, PHP 8.3)  │  :8000
+                    │  UI, auth, modul SiKas/SiStok│
+                    └───────────┬──────────────────┘
+                                │ HTTP (SiPasarBridgeService)
+                                ▼
+                    ┌──────────────────────────────┐
+                    │  ai-sipasar (FastAPI, Py3.13)│  :8010
+                    │  SiPasar Analytics + SiPromo │
+                    │  RAG, tool calling, scoring  │
+                    └───────────┬──────────────────┘
+                                │ SQLAlchemy / asyncpg
+                                ▼
+                    ┌──────────────────────────────┐
+                    │  db  (PostgreSQL 16 pgvector)│  :5433
+                    └──────────────────────────────┘
+```
+
+| Service | Image / build | Port host | Keterangan |
+|---|---|---|---|
+| `app` | `./Dockerfile` | `8000` | Laravel + Vite build, `php artisan serve` |
+| `ai-sipasar` | `./python-services/ai-sipasar/Dockerfile` | `8010` | FastAPI, dokumentasi OpenAPI di `/docs` |
+| `db` | `pgvector/pgvector:pg16` | `5433` | user/pass/db = `sijual` |
+
+Urutan boot dijaga otomatis: `db` sehat → `app` menjalankan `php artisan migrate` → `ai-sipasar` menjalankan `alembic upgrade head` (migrasi baseline mendeteksi tabel yang sudah ada dan menjadi *no-op*, lalu menambah tabel `pgvector`).
 
 ---
 
-## 🛠️ Cara Instalasi Lokal Proyek
+## 🚀 Menjalankan Proyek (Docker Compose)
 
 ### Prasyarat
-* PHP >= 8.2
-* Composer
-* Node.js >= 18 & NPM
-* Database Supabase (PostgreSQL)
+Hanya **Docker Desktop / Docker Engine** dengan plugin Compose v2. PHP, Composer, Node, dan Python **tidak perlu** dipasang di host.
 
-### Langkah Instalasi
+### Langkah
 
-1. **Clone Repository**
+1. **Clone repository**
    ```bash
    git clone https://github.com/SiJual/laravel-sijual.git
    cd laravel-sijual
    ```
 
-2. **Install Dependensi**
-   ```bash
-   composer install
-   npm install
-   ```
-
-3. **Konfigurasi Environment**
+2. **Siapkan environment**
    ```bash
    cp .env.example .env
-   php artisan key:generate
    ```
-   *Sesuaikan variabel `DB_*`, `SUPABASE_*`, dan `GEMINI_API_KEY` di file `.env`.*
+   Isi kunci API yang ingin dipakai (lihat tabel di bawah). Aplikasi tetap bisa dijalankan tanpa kunci apa pun — fitur AI akan mengembalikan pesan gagal yang eksplisit, dan pencarian lokasi otomatis jatuh ke OSM Nominatim yang gratis.
 
-4. **Jalankan Development Server**
-   * Terminal 1 (Vite Asset Bundler):
-     ```bash
-     npm run dev
-     ```
-   * Terminal 2 (Laravel Server):
-     ```bash
-     php artisan serve
-     ```
+   > `docker-compose.yml` **tidak** memakai `DB_*` dari `.env`. Database selalu memakai kontainer `db` lokal supaya hasilnya sama di mesin mana pun.
 
-5. **Akses Aplikasi**
-   Buka browser dan akses `http://localhost:8000`.
+3. **Jalankan seluruh stack**
+   ```bash
+   docker compose up --build
+   ```
+   Build pertama memakan waktu beberapa menit (Composer, npm build, dependensi Python).
+
+4. **Akses aplikasi**
+   * Aplikasi: <http://localhost:8000>
+   * OpenAPI sidecar AI: <http://localhost:8010/docs>
+   * Health check sidecar: <http://localhost:8010/api/v1/health/live>
+
+5. **Menghentikan**
+   ```bash
+   docker compose down          # hentikan
+   docker compose down -v       # hentikan + hapus data database
+   ```
+
+### Perintah lain yang berguna
+
+```bash
+docker compose logs -f app          # log Laravel
+docker compose logs -f ai-sipasar   # log FastAPI
+docker compose exec app php artisan migrate:status
+docker compose exec db psql -U sijual -d sijual
+```
+
+---
+
+## 🔑 Variabel Environment
+
+Semua bersifat opsional untuk *boot*; yang kosong hanya menonaktifkan fitur terkait.
+
+| Variabel | Dipakai oleh | Fungsi |
+|---|---|---|
+| `OPENAI_API_KEY` | app + sidecar | Caption, Copilot, Whisper, generasi poster, embedding RAG |
+| `OPENAI_MODEL` | app | Model teks Laravel (default `gpt-4o-mini`) |
+| `OPENAI_IMAGE_MODEL` | app + sidecar | Model gambar (default `gpt-image-1`) |
+| `SIPROMO_OPENAI_MODEL` | sidecar | Model perencana SiPromo (default `gpt-5-mini`) |
+| `MAPBOX_API_KEY` / `MAPBOX_ACCESS_TOKEN` | app | Peta interaktif SiPasar |
+| `GOOGLE_PLACES_API_KEY` | app + sidecar | Pencarian lokasi & data kompetitor (fallback: OSM Nominatim) |
+| `GOOGLE_GEOCODING_API_KEY` | sidecar | Geocoding (default: mengikuti `GOOGLE_PLACES_API_KEY`) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | app | Login Google (opsional; login email/password tetap jalan) |
+| `APP_KEY` | app | Dibuat otomatis di dalam kontainer bila kosong |
+| `JWT_SECRET` | app + sidecar | Token sesi; ada default lokal |
+| `CLOUDINARY_*` | sidecar | Penyimpanan aset poster (opsional) |
+
+---
+
+## 💻 Menjalankan Tanpa Docker (opsional)
+
+Jalur ini hanya untuk pengembangan; jalur resmi untuk reproduksi adalah `docker compose`.
+
+**Prasyarat:** PHP >= 8.3, Composer, Node.js >= 20, Python >= 3.12, PostgreSQL 16 + `pgvector`.
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+
+cd python-services/ai-sipasar
+python -m venv .venv && .venv/Scripts/pip install -e ".[dev]"   # Linux/macOS: .venv/bin/pip
+alembic upgrade head
+cd ../..
+
+composer run dev     # menjalankan Laravel, Vite, dan sidecar uvicorn sekaligus
+```
+
+---
+
+## 🗂️ Struktur Repositori
+
+```
+app/                          Controller, model, dan service Laravel
+  Services/Market/            SiPasarBridgeService (klien HTTP ke sidecar)
+  Services/AI/                ImageGenerationService, caption, Whisper
+python-services/ai-sipasar/   Sidecar FastAPI (SiPasar Analytics + SiPromo)
+  src/sipasar/                Analitik pasar: provider, scoring, geodemografi
+  src/sipromo/                RAG + tool calling (domain/application/infra)
+  migrations/                 Migrasi Alembic (pgvector, trace)
+  docs/                       Arsitektur, referensi API, deployment
+resources/views/              Blade + Tailwind v4 + Alpine.js
+docker/entrypoint.sh          Entrypoint kontainer Laravel
+docker-compose.yml            Definisi stack lokal
+```
+
+---
+
+## 🔄 Dokumen Acuan Pengembangan
+
+1. **`summary.md`** — *Ringkasan Eksekutif*, *Problem Statement*, dan *Design System / Tokens*.
+2. **`procedure.md`** — *Playbook* pelaksanaan task per fase.
+3. **`implementation_plan.md`** — Arsitektur teknikal, skema database, routing.
+4. **`tasks.md`** — Checklist task & milestone.
+5. **`revisions.md`** — Changelog penyesuaian teknis.
+6. **`python-services/ai-sipasar/docs/`** — Dokumentasi sidecar AI.
+
+---
+
+## 🩺 Troubleshooting
+
+| Gejala | Solusi |
+|---|---|
+| `port is already allocated` | Ubah pemetaan port di `docker-compose.yml` (mis. `8001:8000`). |
+| `app` tidak sehat, `ai-sipasar` tidak pernah start | `ai-sipasar` menunggu health check `app`. Cek `docker compose logs app`. |
+| Fitur AI mengembalikan error | `OPENAI_API_KEY` kosong atau kuota habis. |
+| Peta tidak tampil | `MAPBOX_API_KEY` belum diisi. |
+| Ingin database bersih | `docker compose down -v && docker compose up --build`. |

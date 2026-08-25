@@ -43,6 +43,8 @@ class TransactionRequest extends FormRequest
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
             'category_id' => 'nullable|string',
+            'product_id' => 'nullable|string',
+            'quantity' => 'nullable|integer|min:1',
             'category_name' => 'nullable|string|max:100',
             'outlet_id' => 'nullable|string',
             'payment_method' => 'nullable|string|max:50',

@@ -1,0 +1,16 @@
+.venv
+.env
+.git
+.github
+__pycache__
+**/__pycache__
+*.egg-info
+.pytest_cache
+.ruff_cache
+.mypy_cache
+tests
+docs
+reports
+scripts
+sipasar-analytics
+uv.lock

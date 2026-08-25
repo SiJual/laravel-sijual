@@ -21,7 +21,7 @@
                         <div class="font-bold text-on-surface">{{ $product->name }}</div>
                         <div class="text-[10px] text-on-surface-variant/70">{{ $product->sku }}</div>
                     </td>
-                    <td class="p-3.5 text-on-surface-variant">{{ $product->category }}</td>
+                    <td class="p-3.5 text-on-surface-variant">{{ $product->category_label }}</td>
                     <td class="p-3.5 font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                     <td class="p-3.5 font-bold">{{ $product->stock_level }} Unit</td>
                     <td class="p-3.5">

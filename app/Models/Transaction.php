@@ -20,6 +20,8 @@ class Transaction extends Model
         'umkm_id',
         'outlet_id',
         'category_id',
+        'product_id',
+        'quantity',
         'type',
         'amount',
         'description',
@@ -34,12 +36,18 @@ class Transaction extends Model
 
     protected $casts = [
         'amount' => 'integer',
+        'quantity' => 'integer',
         'is_verified' => 'boolean',
         'ai_metadata' => 'array',
         'transaction_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 
     public function umkmProfile(): BelongsTo
     {

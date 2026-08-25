@@ -41,8 +41,13 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'google_places' => [
+        'key' => env('GOOGLE_PLACES_API_KEY'),
+    ],
+
     'mapbox' => [
-        'key' => env('MAPBOX_API_KEY', env('MAPBOX_ACCESS_TOKEN')),
+        // An empty MAPBOX_API_KEY must fall through, not win.
+        'key' => env('MAPBOX_API_KEY') ?: env('MAPBOX_ACCESS_TOKEN'),
     ],
 
     'sipasar_bridge' => [

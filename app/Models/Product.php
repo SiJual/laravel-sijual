@@ -25,6 +25,7 @@ class Product extends Model
         'stock_level',
         'status',
         'image_url',
+        'description',
         'low_stock_threshold',
     ];
 
@@ -35,6 +36,25 @@ class Product extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Allowed values for the `category` enum column, mapped to the label shown
+     * in the UI. The database rejects anything outside these keys.
+     *
+     * @var array<string, string>
+     */
+    public const CATEGORIES = [
+        'food_bev' => 'Kuliner / F&B',
+        'textiles' => 'Fashion & Batik',
+        'handicrafts' => 'Kerajinan Tangan',
+        'services' => 'Jasa',
+        'other' => 'Umum',
+    ];
+
+    public function getCategoryLabelAttribute(): string
+    {
+        return self::CATEGORIES[$this->category] ?? '—';
+    }
 
     public function umkmProfile(): BelongsTo
     {

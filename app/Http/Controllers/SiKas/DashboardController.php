@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SiKas;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Outlet;
+use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\UmkmProfile;
 use App\Services\AI\FinancialInsightService;
@@ -187,6 +188,9 @@ class DashboardController extends Controller
 
         $outlets = Outlet::where('umkm_id', $profile->id)->get();
 
+        // SiStok catalogue for the quick-entry form.
+        $products = Product::where('umkm_id', $profile->id)->orderBy('name')->get();
+
         // 6. AI Insight
         $aiInsight = $this->insightService->generateInsight((int) $allTimeIncome, (int) $allTimeExpense);
 
@@ -218,6 +222,7 @@ class DashboardController extends Controller
             'transactions' => $transactions,
             'categories' => $categories,
             'outlets' => $outlets,
+            'products' => $products,
             'aiInsight' => $aiInsight,
         ]);
     }

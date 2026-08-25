@@ -16,6 +16,16 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="p-4 rounded-md bg-error/10 text-error text-sm font-semibold">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- Summary Cards --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <x-ui.stat-card
@@ -44,10 +54,9 @@
 
                 <select name="category" onchange="this.form.submit()" class="px-3 py-2 bg-surface-alt border border-border-input rounded-full text-xs text-on-surface focus:ring-2 focus:ring-primary/20 outline-none">
                     <option value="">Semua Kategori</option>
-                    <option value="Kuliner / F&B" {{ request('category') === 'Kuliner / F&B' ? 'selected' : '' }}>Kuliner / F&B</option>
-                    <option value="Fashion & Batik" {{ request('category') === 'Fashion & Batik' ? 'selected' : '' }}>Fashion & Batik</option>
-                    <option value="Kerajinan Tangan" {{ request('category') === 'Kerajinan Tangan' ? 'selected' : '' }}>Kerajinan Tangan</option>
-                    <option value="Umum" {{ request('category') === 'Umum' ? 'selected' : '' }}>Umum</option>
+                    @foreach(\App\Models\Product::CATEGORIES as $value => $label)
+                        <option value="{{ $value }}" {{ request('category') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
                 </select>
 
                 <button type="submit" class="px-4 py-2 bg-primary text-white font-semibold text-xs rounded-full">Filter</button>
@@ -77,10 +86,9 @@
                     <x-form.input label="SKU / Kode Produk (Opsional)" name="sku" placeholder="SKU-8821" />
 
                     <x-form.select label="Kategori Produk" name="category" required>
-                        <option value="Kuliner / F&B">Kuliner / F&B</option>
-                        <option value="Fashion & Batik">Fashion & Batik</option>
-                        <option value="Kerajinan Tangan">Kerajinan Tangan</option>
-                        <option value="Umum">Umum</option>
+                        @foreach(\App\Models\Product::CATEGORIES as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
                     </x-form.select>
 
                     <div class="grid grid-cols-2 gap-3">

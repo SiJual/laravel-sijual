@@ -1,0 +1,116 @@
+# SiJual — local reproducible stack.
+#
+#   docker compose up --build
+#
+#   Laravel UI ........ http://localhost:8000
+#   AI sidecar docs ... http://localhost:8010/docs
+#   PostgreSQL ........ localhost:5433 (user/pass/db = sijual)
+#
+# Secrets are read from the root .env (or the shell) — see .env.example.
+# Everything else is pinned here so a fresh clone boots identically.
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.0-pg16
+    container_name: sijual-db
+    environment:
+      POSTGRES_USER: sijual
+      POSTGRES_PASSWORD: sijual
+      POSTGRES_DB: sijual
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sijual -d sijual"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sijual-app
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: SiJual
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: http://localhost:8000
+      LOG_CHANNEL: stderr
+      # artisan serve is single-threaded by default; one slow request would
+      # otherwise block the whole app.
+      PHP_CLI_SERVER_WORKERS: 6
+
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: sijual
+      DB_USERNAME: sijual
+      DB_PASSWORD: sijual
+
+      SESSION_DRIVER: database
+      CACHE_STORE: file
+      # Synchronous only — the MVP scope has no background workers.
+      QUEUE_CONNECTION: sync
+
+      # Python AI sidecar (in-network, container port 8000).
+      SIPASAR_BRIDGE_URL: http://ai-sipasar:8000
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      WHISPER_API_KEY: ${WHISPER_API_KEY:-${OPENAI_API_KEY:-}}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      MAPBOX_API_KEY: ${MAPBOX_API_KEY:-${MAPBOX_ACCESS_TOKEN:-}}
+      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8000/auth/google/callback}
+      JWT_SECRET: ${JWT_SECRET:-local-development-jwt-secret-change-me}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ai-sipasar:
+    build:
+      context: ./python-services/ai-sipasar
+      dockerfile: Dockerfile
+    container_name: sijual-ai-sipasar
+    ports:
+      - "8010:8000"
+    environment:
+      APP_ENV: development
+      LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+asyncpg://sijual:sijual@db:5432/sijual
+
+      # Laravel mints a JWT per request (same JWT_SECRET) so the pipeline
+      # resolves the right tenant; /v1/analysis stays public.
+      AUTH_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-local-development-jwt-secret-change-me}
+      JWT_ALGORITHM: HS256
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${SIPROMO_OPENAI_MODEL:-gpt-5-mini}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+      GOOGLE_GEOCODING_API_KEY: ${GOOGLE_GEOCODING_API_KEY:-${GOOGLE_PLACES_API_KEY:-}}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      # Laravel owns the base schema; Alembic's baseline no-ops once it exists.
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:

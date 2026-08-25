@@ -18,9 +18,20 @@ class HubController extends Controller
     {
         $profile = $request->get('active_umkm') ?? UmkmProfile::where('user_id', Auth::id())->first();
 
-        $totalRevenue = Transaction::where('umkm_id', $profile->id)
+        $todayRevenue = Transaction::where('umkm_id', $profile->id)
             ->where('type', 'income')
+            ->whereDate('transaction_date', today())
             ->sum('amount');
+
+        $yesterdayRevenue = Transaction::where('umkm_id', $profile->id)
+            ->where('type', 'income')
+            ->whereDate('transaction_date', today()->subDay())
+            ->sum('amount');
+
+        // Only meaningful when there is something to compare against.
+        $revenueChange = $yesterdayRevenue > 0
+            ? round((($todayRevenue - $yesterdayRevenue) / $yesterdayRevenue) * 100)
+            : null;
 
         $recentTransactions = Transaction::where('umkm_id', $profile->id)
             ->with('category')
@@ -28,9 +39,10 @@ class HubController extends Controller
             ->take(5)
             ->get();
 
-        $activeCampaigns = ContentAsset::where('umkm_id', $profile->id)
+        $publishedCampaigns = ContentAsset::where('umkm_id', $profile->id)
             ->where('status', 'published')
-            ->count();
+            ->latest()
+            ->get();
 
         $latestAnalysis = MarketAnalysis::where('umkm_id', $profile->id)
             ->latest()
@@ -41,10 +53,13 @@ class HubController extends Controller
         return view('hub.dashboard', [
             'activeNav' => 'hub',
             'profile' => $profile,
-            'totalRevenue' => $totalRevenue,
+            'todayRevenue' => $todayRevenue,
+            'revenueChange' => $revenueChange,
             'recentTransactions' => $recentTransactions,
-            'activeCampaigns' => $activeCampaigns,
+            'activeCampaigns' => $publishedCampaigns->count(),
+            'latestCampaign' => $publishedCampaigns->first(),
             'marketScore' => $latestMarketScore,
+            'latestAnalysis' => $latestAnalysis,
         ]);
     }
 

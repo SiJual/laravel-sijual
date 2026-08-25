@@ -8,6 +8,7 @@ use App\Models\UmkmProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -56,7 +57,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:100',
-            'category' => 'required|string|max:100',
+            'category' => ['required', Rule::in(array_keys(Product::CATEGORIES))],
             'price' => 'required|numeric|min:0',
             'stock_level' => 'required|integer|min:0',
             'image_url' => 'nullable|url|max:2048',
@@ -86,7 +87,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'name'        => 'required|string|max:255',
-            'category'    => 'required|string|max:100',
+            'category'    => ['required', Rule::in(array_keys(Product::CATEGORIES))],
             'price'       => 'required|numeric|min:0',
             'stock_level' => 'required|integer|min:0',
             'image_url'   => 'nullable|url|max:2048',
@@ -128,9 +129,14 @@ class ProductController extends Controller
         $prefix = strtoupper(preg_replace('/[^A-Za-z]/', '', $productName));
         $prefix = substr($prefix, 0, 3) ?: 'PRD';
 
-        $maxId = (int) Product::max('id') + 1;
-        $sequence = str_pad($maxId, 4, '0', STR_PAD_LEFT);
+        // Primary keys are UUIDs, so the sequence is counted per UMKM instead.
+        $sequence = Product::where('umkm_id', $umkmId)->count() + 1;
 
-        return "{$prefix}-{$sequence}";
+        do {
+            $sku = $prefix . '-' . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+            $sequence++;
+        } while (Product::where('umkm_id', $umkmId)->where('sku', $sku)->exists());
+
+        return $sku;
     }
 }
