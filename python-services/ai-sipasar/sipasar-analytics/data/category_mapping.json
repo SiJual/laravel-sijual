@@ -1,0 +1,57 @@
+{
+  "kuliner_kopi": {
+    "google_places_types": ["cafe"],
+    "osm_tags": {"amenity": "cafe"},
+    "keywords": ["kopi", "coffee", "cafe", "coffeehouse"]
+  },
+  "kuliner_restoran": {
+    "google_places_types": ["restaurant"],
+    "osm_tags": {"amenity": "restaurant"},
+    "keywords": ["restoran", "restaurant", "warung makan", "rumah makan"]
+  },
+  "kuliner_warung": {
+    "google_places_types": ["restaurant", "meal_takeaway"],
+    "osm_tags": {"amenity": "fast_food"},
+    "keywords": ["warung", "kedai", "warteg", "nasi"]
+  },
+  "kuliner_bakery": {
+    "google_places_types": ["bakery"],
+    "osm_tags": {"shop": "bakery"},
+    "keywords": ["bakery", "roti", "bread", "pastry"]
+  },
+  "retail_fashion": {
+    "google_places_types": ["clothing_store"],
+    "osm_tags": {"shop": "clothes"},
+    "keywords": ["baju", "pakaian", "fashion", "clothing"]
+  },
+  "retail_elektronik": {
+    "google_places_types": ["electronics_store"],
+    "osm_tags": {"shop": "electronics"},
+    "keywords": ["elektronik", "gadget", "hp", "laptop"]
+  },
+  "retail_sembako": {
+    "google_places_types": ["grocery_or_supermarket", "convenience_store"],
+    "osm_tags": {"shop": "convenience"},
+    "keywords": ["sembako", "grocery", "minimarket", "warung"]
+  },
+  "jasa_salon": {
+    "google_places_types": ["beauty_salon", "hair_care"],
+    "osm_tags": {"shop": "beauty"},
+    "keywords": ["salon", "beauty", "barbershop", "pangkas"]
+  },
+  "jasa_laundry": {
+    "google_places_types": ["laundry"],
+    "osm_tags": {"shop": "laundry"},
+    "keywords": ["laundry", "cuci baju", "dry clean"]
+  },
+  "jasa_bengkel": {
+    "google_places_types": ["car_repair"],
+    "osm_tags": {"shop": "car_repair"},
+    "keywords": ["bengkel", "service motor", "otomotif"]
+  },
+  "default": {
+    "google_places_types": ["establishment"],
+    "osm_tags": {},
+    "keywords": []
+  }
+}

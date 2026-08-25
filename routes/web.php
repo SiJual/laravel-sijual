@@ -50,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
         // SiPasar Routes
         Route::prefix('sipasar')->name('sipasar.')->group(function () {
             Route::get('/', [App\Http\Controllers\SiPasar\AnalysisController::class, 'index'])->name('landing');
+            Route::get('/geocode', [App\Http\Controllers\SiPasar\LocationSearchController::class, 'search'])->name('geocode')->middleware('throttle:20,1');
             Route::get('/history', [App\Http\Controllers\SiPasar\AnalysisController::class, 'history'])->name('history');
             Route::post('/analyze', [App\Http\Controllers\SiPasar\AnalysisController::class, 'analyze'])->name('analyze')->middleware('throttle:10,1');
             Route::get('/results/{analysis}', [App\Http\Controllers\SiPasar\AnalysisController::class, 'results'])->name('results');

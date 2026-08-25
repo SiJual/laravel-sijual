@@ -1,0 +1,1 @@
+"""SiPasar Analytics test suite."""

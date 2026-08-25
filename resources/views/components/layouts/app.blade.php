@@ -24,7 +24,7 @@
             @endif
 
             {{-- Page Content --}}
-            <main class="{{ (isset($hideTopBar) && $hideTopBar) ? '' : 'pt-16' }} flex-1 flex flex-col relative bg-[#FCFBFB] overflow-hidden">
+            <main class="{{ (isset($hideTopBar) && $hideTopBar) ? '' : 'pt-16' }} flex-1 flex flex-col relative bg-[#FCFBFB] overflow-y-auto">
                 {{ $slot }}
             </main>
         </div>

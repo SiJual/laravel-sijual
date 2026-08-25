@@ -1,0 +1,57 @@
+{
+  "kuliner_kopi": {
+    "google_places_types": ["cafe", "coffee_shop"],
+    "osm_tag_sets": [{"amenity": "cafe"}],
+    "keywords": ["kopi", "coffee", "cafe", "coffeehouse"]
+  },
+  "kuliner_restoran": {
+    "google_places_types": ["restaurant"],
+    "osm_tag_sets": [{"amenity": "restaurant"}],
+    "keywords": ["restoran", "restaurant", "warung makan", "rumah makan"]
+  },
+  "kuliner_warung": {
+    "google_places_types": ["restaurant", "meal_takeaway", "fast_food_restaurant"],
+    "osm_tag_sets": [{"amenity": "fast_food"}, {"amenity": "restaurant"}],
+    "keywords": ["warung", "kedai", "warteg", "nasi"]
+  },
+  "kuliner_bakery": {
+    "google_places_types": ["bakery"],
+    "osm_tag_sets": [{"shop": "bakery"}],
+    "keywords": ["bakery", "roti", "bread", "pastry"]
+  },
+  "retail_fashion": {
+    "google_places_types": ["clothing_store"],
+    "osm_tag_sets": [{"shop": "clothes"}],
+    "keywords": ["baju", "pakaian", "fashion", "clothing"]
+  },
+  "retail_elektronik": {
+    "google_places_types": ["electronics_store"],
+    "osm_tag_sets": [{"shop": "electronics"}, {"shop": "mobile_phone"}],
+    "keywords": ["elektronik", "gadget", "hp", "laptop"]
+  },
+  "retail_sembako": {
+    "google_places_types": ["grocery_store", "supermarket", "convenience_store"],
+    "osm_tag_sets": [{"shop": "convenience"}, {"shop": "supermarket"}],
+    "keywords": ["sembako", "grocery", "minimarket", "warung"]
+  },
+  "jasa_salon": {
+    "google_places_types": ["beauty_salon", "hair_care"],
+    "osm_tag_sets": [{"shop": "beauty"}, {"shop": "hairdresser"}],
+    "keywords": ["salon", "beauty", "barbershop", "pangkas"]
+  },
+  "jasa_laundry": {
+    "google_places_types": ["laundry"],
+    "osm_tag_sets": [{"shop": "laundry"}, {"shop": "dry_cleaning"}],
+    "keywords": ["laundry", "cuci baju", "dry clean"]
+  },
+  "jasa_bengkel": {
+    "google_places_types": ["car_repair"],
+    "osm_tag_sets": [{"shop": "car_repair"}, {"shop": "motorcycle_repair"}],
+    "keywords": ["bengkel", "service motor", "otomotif"]
+  },
+  "default": {
+    "google_places_types": [],
+    "osm_tag_sets": [{"amenity": "*"}, {"shop": "*"}],
+    "keywords": []
+  }
+}

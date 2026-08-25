@@ -7,7 +7,7 @@ use App\Http\Requests\ContentRequest;
 use App\Models\ContentAsset;
 use App\Models\UmkmProfile;
 use App\Services\AI\CaptionGeneratorService;
-use App\Services\AI\FluxSchnellService;
+use App\Services\AI\ImageGenerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,15 +15,18 @@ class GenerateController extends Controller
 {
     public function __construct(
         private CaptionGeneratorService $captionService,
-        private FluxSchnellService $fluxService
+        private ImageGenerationService $imageService
     ) {}
 
     public function create(ContentRequest $request): RedirectResponse
     {
+        // Image generation (OpenAI) can take a while — avoid a 30s PHP timeout.
+        set_time_limit(90);
+
         $profile = UmkmProfile::where('user_id', Auth::id())->firstOrFail();
 
         $aiResult = $this->captionService->generate($profile->business_name, $request->prompt, $request->content_type);
-        $imageUrl = $this->fluxService->generateImage($request->prompt);
+        $imageUrl = $this->imageService->generateImage($request->prompt);
 
         $content = ContentAsset::create([
             'umkm_id' => $profile->id,

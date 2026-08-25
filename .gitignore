@@ -51,3 +51,10 @@ Homestead.yaml
 /.neon
 /skills-lock.json
 /.agents
+
+# ai-sipasar python sidecar
+/python-services/ai-sipasar/.venv
+/python-services/ai-sipasar/.env
+/python-services/ai-sipasar/__pycache__
+/python-services/ai-sipasar/**/__pycache__
+/python-services/ai-sipasar/*.egg-info

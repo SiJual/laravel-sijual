@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-on-surface mb-1.5">Model AI Generatif</label>
-                    <input type="text" value="Flux Schnell + Gemini 2.0 Flash" disabled class="w-full px-3.5 py-2.5 bg-surface-alt/60 border border-border-input rounded-md text-sm text-on-surface-variant cursor-not-allowed">
+                    <input type="text" value="OpenAI (gpt-image-1 + text)" disabled class="w-full px-3.5 py-2.5 bg-surface-alt/60 border border-border-input rounded-md text-sm text-on-surface-variant cursor-not-allowed">
                 </div>
             </div>
 

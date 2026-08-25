@@ -42,7 +42,11 @@ return [
     ],
 
     'mapbox' => [
-        'key' => env('MAPBOX_API_KEY'),
+        'key' => env('MAPBOX_API_KEY', env('MAPBOX_ACCESS_TOKEN')),
+    ],
+
+    'sipasar_bridge' => [
+        'base_url' => env('SIPASAR_BRIDGE_URL', 'http://127.0.0.1:8010'),
     ],
 
 ];

@@ -19,61 +19,88 @@
             </div>
 
             <form action="{{ route('sipasar.analyze') }}" method="POST" id="analyze-form" class="space-y-4"
-                  x-data="{ submitting: false, step: 0, startTime: 0, messages: [
-                      'Menganalisis kepadatan & demografi area...',
-                      'Menyintesis data kompetitor dengan AI...',
-                      'Menyusun skor kelayakan & peta pasar...'
-                  ] }"
+                  x-data="{
+                      submitting: false, step: 0, startTime: 0,
+                      messages: [
+                          'Menganalisis kepadatan & demografi area...',
+                          'Menyintesis data kompetitor dengan AI...',
+                          'Menyusun skor kelayakan & peta pasar...'
+                      ],
+                      query: '{{ old('location_query', 'Jakarta Selatan') }}',
+                      selectedLat: {{ old('latitude', $latestAnalysis?->latitude ?? ($profile->latitude ?? -6.2444)) }},
+                      selectedLng: {{ old('longitude', $latestAnalysis?->longitude ?? ($profile->longitude ?? 106.8006)) }},
+                      radiusKm: {{ old('radius_km', 2.5) }},
+                      results: [], open: false, loading: false, timer: null,
+                      search() {
+                          clearTimeout(this.timer);
+                          if (this.query.length > 2) {
+                              this.loading = true;
+                              this.timer = setTimeout(() => {
+                                  fetch(`{{ route('sipasar.geocode') }}?q=${encodeURIComponent(this.query)}`)
+                                      .then(res => res.json())
+                                      .then(json => { this.results = json.data || []; this.open = true; this.loading = false; })
+                                      .catch(() => { this.loading = false; });
+                              }, 400);
+                          } else {
+                              this.results = [];
+                              this.open = false;
+                          }
+                      },
+                      selectResult(item) {
+                          this.query = item.name;
+                          this.open = false;
+                          this.selectedLat = item.lat;
+                          this.selectedLng = item.lng;
+                          if (window.map && window.marker) {
+                              window.map.flyTo({ center: [item.lng, item.lat], zoom: 15 });
+                              window.marker.setLngLat([item.lng, item.lat]);
+                          }
+                      },
+                      applyFilters() {
+                          if (window.map && window.marker) {
+                              window.map.flyTo({ center: [this.selectedLng, this.selectedLat], zoom: 14 });
+                              window.marker.setLngLat([this.selectedLng, this.selectedLat]);
+                          }
+                          if (window.drawRadiusCircle) {
+                              window.drawRadiusCircle(parseFloat(this.selectedLng), parseFloat(this.selectedLat), parseFloat(this.radiusKm));
+                          }
+                      }
+                  }"
                   @submit="submitting = true; startTime = Date.now(); setInterval(() => { step = Math.min(2, Math.floor((Date.now() - startTime) / 3500)); }, 500)">
                 @csrf
                 <div>
                     <label for="location_query" class="block text-xs font-semibold text-on-surface-variant mb-1.5">Location Search</label>
-                    <div class="relative" x-data="{ query: '{{ old('location_query', 'Jakarta Selatan') }}', selectedLat: '{{ old('latitude', $latestAnalysis?->latitude ?? ($profile->latitude ?? -6.2444)) }}', selectedLng: '{{ old('longitude', $latestAnalysis?->longitude ?? ($profile->longitude ?? 106.8006)) }}', results: [], open: false, loading: false, timer: null }" 
-                         x-init="$watch('query', value => {
-                             clearTimeout(timer);
-                             if (value.length > 2) {
-                                 loading = true;
-                                 timer = setTimeout(() => {
-                                     fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(value)}.json?access_token={{ config('services.mapbox.key') }}&country=id&limit=5`)
-                                         .then(res => res.json())
-                                         .then(data => {
-                                             results = data.features || [];
-                                             open = true;
-                                             loading = false;
-                                         });
-                                 }, 400);
-                             } else {
-                                 results = [];
-                                 open = false;
-                             }
-                         })">
+                    <div class="relative">
                         <input type="hidden" name="latitude" x-model="selectedLat">
                         <input type="hidden" name="longitude" x-model="selectedLng">
                         <svg class="absolute left-3 top-2.5 size-4 text-on-surface-variant" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <input type="text" id="location_query" name="location_query" x-model="query" required
+                               @input="search()"
                                @focus="open = results.length > 0"
                                @click.outside="open = false"
-                               placeholder="e.g. Jakarta Selatan"
+                               placeholder="cth. AADK Keputih, atau Jakarta Selatan"
                                class="w-full pl-9 pr-3 py-2 bg-white border border-border-input rounded-md text-sm text-on-surface focus:ring-2 focus:ring-primary/20 outline-none" autocomplete="off">
-                        
+
                         {{-- Autocomplete Dropdown --}}
-                        <div x-show="open && results.length > 0" x-transition class="absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-48 overflow-y-auto z-50 text-left">
-                            <template x-for="item in results" :key="item.id">
-                                <div @click="query = item.place_name; open = false; if (item.center) { selectedLng = item.center[0]; selectedLat = item.center[1]; } if (window.map && window.marker && item.center) { window.map.flyTo({ center: item.center, zoom: 14 }); window.marker.setLngLat(item.center); }"
-                                     class="px-3 py-2 text-xs text-on-surface hover:bg-surface-alt cursor-pointer border-b border-border last:border-0 truncate">
-                                    <span x-text="item.place_name"></span>
+                        <div x-show="open && results.length > 0" x-transition class="absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-56 overflow-y-auto z-50 text-left">
+                            <template x-for="(item, index) in results" :key="index">
+                                <div @click="selectResult(item)"
+                                     class="px-3 py-2 text-xs text-on-surface hover:bg-surface-alt cursor-pointer border-b border-border last:border-0">
+                                    <div class="font-semibold truncate" x-text="item.name"></div>
+                                    <div class="text-[10px] text-on-surface-variant truncate" x-text="item.address"></div>
                                 </div>
                             </template>
                         </div>
+                        <div x-show="loading" class="absolute right-3 top-2.5 text-[10px] text-on-surface-variant">...</div>
                     </div>
                 </div>
 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
                         <label for="radius_km" class="block text-xs font-semibold text-on-surface-variant">Analysis Radius</label>
-                        <span class="text-xs font-bold text-primary" id="radius_val">2.5 km</span>
+                        <span class="text-xs font-bold text-primary" x-text="radiusKm + ' km'"></span>
                     </div>
-                    <input type="range" id="radius_km" name="radius_km" min="0.5" max="5.0" step="0.5" value="2.5" class="w-full accent-primary" oninput="document.getElementById('radius_val').innerText = this.value + ' km'">
+                    <input type="range" id="radius_km" name="radius_km" x-model="radiusKm" min="0.5" max="5.0" step="0.5" class="w-full accent-primary">
                     <div class="flex justify-between text-[10px] text-on-surface-variant mt-1">
                         <span>1km</span>
                         <span>5km</span>
@@ -81,16 +108,24 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-on-surface-variant mb-2">Competitor Categories</label>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-xs font-semibold flex items-center gap-1"><svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Food & Beverage</span>
-                        <span class="px-3 py-1 bg-surface-alt text-on-surface-variant border border-border rounded-full text-xs font-medium">Retail</span>
-                        <span class="px-3 py-1 bg-surface-alt text-on-surface-variant border border-border rounded-full text-xs font-medium">Services</span>
-                    </div>
+                    <label for="category" class="block text-xs font-semibold text-on-surface-variant mb-1.5">Kategori Usaha</label>
+                    <select id="category" name="category" required
+                            class="w-full px-3 py-2 bg-white border border-border-input rounded-md text-sm text-on-surface focus:ring-2 focus:ring-primary/20 outline-none">
+                        <option value="kuliner_kopi">Kafe & Coffee Shop</option>
+                        <option value="kuliner_restoran">Restoran & Rumah Makan</option>
+                        <option value="kuliner_warung">Warung, Kedai & Fast Food</option>
+                        <option value="kuliner_bakery">Toko Roti & Pastry</option>
+                        <option value="retail_fashion">Toko Pakaian & Fashion</option>
+                        <option value="retail_elektronik">Elektronik, HP & Gadget</option>
+                        <option value="retail_sembako">Sembako, Minimarket & Supermarket</option>
+                        <option value="jasa_salon">Salon, Barbershop & Pangkas Rambut</option>
+                        <option value="jasa_laundry">Laundry & Dry Cleaning</option>
+                        <option value="jasa_bengkel">Bengkel Mobil & Motor</option>
+                    </select>
                 </div>
 
                 <div class="flex flex-col gap-2 pt-2">
-                    <button type="button" :disabled="submitting" class="w-full py-2.5 bg-white border border-primary text-primary font-semibold text-sm rounded-md hover:bg-primary/5 transition disabled:opacity-50">
+                    <button type="button" @click="applyFilters()" :disabled="submitting" class="w-full py-2.5 bg-white border border-primary text-primary font-semibold text-sm rounded-md hover:bg-primary/5 transition disabled:opacity-50">
                         Apply Filters
                     </button>
                     <button type="submit" :disabled="submitting"
@@ -158,76 +193,61 @@
         const marker = window.marker = new mapboxgl.Marker({ element: el })
             .setLngLat([centerLng, centerLat])
             .addTo(map);
-            
+
+        // Reusable radius-circle drawer — used on initial load (if a latest
+        // analysis exists) and by the "Apply Filters" button.
+        window.drawRadiusCircle = function(lng, lat, radiusKm) {
+            const buildCircle = () => {
+                const points = 64;
+                const km = radiusKm;
+                const distanceX = km / (111.320 * Math.cos(lat * Math.PI / 180));
+                const distanceY = km / 110.574;
+                const ret = [];
+                let theta, x, y;
+                for (let i = 0; i < points; i++) {
+                    theta = (i / points) * (2 * Math.PI);
+                    x = distanceX * Math.cos(theta);
+                    y = distanceY * Math.sin(theta);
+                    ret.push([lng + x, lat + y]);
+                }
+                ret.push(ret[0]);
+                return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ret] } };
+            };
+
+            // If the source already exists, the style is obviously ready — update it directly.
+            // Only the very first call (source doesn't exist yet) needs to wait for the map's
+            // one-time 'load' event.
+            const existing = map.getSource('radius-circle');
+            if (existing) {
+                existing.setData(buildCircle());
+                return;
+            }
+
+            if (!map.isStyleLoaded()) {
+                map.once('load', () => window.drawRadiusCircle(lng, lat, radiusKm));
+                return;
+            }
+
+            map.addSource('radius-circle', { type: 'geojson', data: buildCircle() });
+            map.addLayer({ id: 'radius-circle-fill', type: 'fill', source: 'radius-circle', paint: { 'fill-color': '#9D3D2B', 'fill-opacity': 0.1 } });
+            map.addLayer({ id: 'radius-circle-stroke', type: 'line', source: 'radius-circle', paint: { 'line-color': '#9D3D2B', 'line-width': 1, 'line-opacity': 0.3 } });
+        };
+
         @if($latestAnalysis && $latestAnalysis->competitors)
             // Render competitors on the map if they exist
             @foreach($latestAnalysis->competitors as $comp)
             {
                 const compEl = document.createElement('div');
                 compEl.className = 'w-3 h-3 bg-on-surface-variant rounded-full opacity-70 border border-white';
-                
+
                 new mapboxgl.Marker({ element: compEl })
                     .setLngLat([{{ $comp->longitude }}, {{ $comp->latitude }}])
                     .setPopup(new mapboxgl.Popup({ offset: 10 }).setHTML('<p class="text-xs font-bold">{{ addslashes($comp->name) }}</p>'))
                     .addTo(window.map);
             }
             @endforeach
-            
-            // Add a radius circle using turf or mapbox source
-            window.map.on('load', () => {
-                // To keep it simple, we draw a polygon circle around the center
-                const radius = {{ $latestAnalysis?->radius_km ?? 2.5 }};
-                const points = 64;
-                const coords = { latitude: centerLat, longitude: centerLng };
-                
-                const km = radius;
-                const ret = [];
-                const distanceX = km/(111.320*Math.cos(coords.latitude*Math.PI/180));
-                const distanceY = km/110.574;
-                
-                let theta, x, y;
-                for(let i=0; i<points; i++) {
-                    theta = (i/points)*(2*Math.PI);
-                    x = distanceX*Math.cos(theta);
-                    y = distanceY*Math.sin(theta);
-                    ret.push([coords.longitude+x, coords.latitude+y]);
-                }
-                ret.push(ret[0]);
-                
-                map.addSource('polygon', {
-                    'type': 'geojson',
-                    'data': {
-                        'type': 'Feature',
-                        'geometry': {
-                            'type': 'Polygon',
-                            'coordinates': [ret]
-                        }
-                    }
-                });
-                
-                map.addLayer({
-                    'id': 'polygon-fill',
-                    'type': 'fill',
-                    'source': 'polygon',
-                    'layout': {},
-                    'paint': {
-                        'fill-color': '#9D3D2B',
-                        'fill-opacity': 0.1
-                    }
-                });
-                
-                map.addLayer({
-                    'id': 'polygon-stroke',
-                    'type': 'line',
-                    'source': 'polygon',
-                    'layout': {},
-                    'paint': {
-                        'line-color': '#9D3D2B',
-                        'line-width': 1,
-                        'line-opacity': 0.3
-                    }
-                });
-            });
+
+            window.drawRadiusCircle(centerLng, centerLat, {{ $latestAnalysis?->radius_km ?? 2.5 }});
         @endif
     </script>
     @endpush

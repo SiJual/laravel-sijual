@@ -8,9 +8,7 @@ return [
     'openai' => [
         'api_key' => env('OPENAI_API_KEY', ''),
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
-    ],
-    'flux' => [
-        'endpoint' => env('FLUX_ENDPOINT', 'http://localhost:8080'),
+        'image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1'),
     ],
     'whisper' => [
         'api_key' => env('WHISPER_API_KEY', ''),

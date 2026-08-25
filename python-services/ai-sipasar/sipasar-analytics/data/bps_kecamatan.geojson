@@ -1,0 +1,209 @@
+{
+  "type": "FeatureCollection",
+  "description": "Sample BPS-style demographic data per kecamatan. Replace with real BPS data from bps.go.id.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357801",
+        "kecamatan": "Gambir",
+        "kabupaten": "Jakarta Pusat",
+        "provinsi": "DKI Jakarta",
+        "population": 72500,
+        "area_km2": 7.6,
+        "population_density_per_km2": 9539,
+        "umr_monthly_idr": 5200000,
+        "economic_indicator": "tinggi",
+        "dominant_land_use": "perkantoran",
+        "dominant_consumer_segment": "pekerja_kantoran",
+        "purchasing_power_index": 0.82
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [106.810, -6.165],
+            [106.835, -6.165],
+            [106.835, -6.185],
+            [106.810, -6.185],
+            [106.810, -6.165]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357802",
+        "kecamatan": "Menteng",
+        "kabupaten": "Jakarta Pusat",
+        "provinsi": "DKI Jakarta",
+        "population": 66000,
+        "area_km2": 6.5,
+        "population_density_per_km2": 10154,
+        "umr_monthly_idr": 5200000,
+        "economic_indicator": "tinggi",
+        "dominant_land_use": "permukiman_elite",
+        "dominant_consumer_segment": "residensial_menengah_atas",
+        "purchasing_power_index": 0.90
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [106.835, -6.185],
+            [106.860, -6.185],
+            [106.860, -6.205],
+            [106.835, -6.205],
+            [106.835, -6.185]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357803",
+        "kecamatan": "Sawah Besar",
+        "kabupaten": "Jakarta Pusat",
+        "provinsi": "DKI Jakarta",
+        "population": 97000,
+        "area_km2": 6.2,
+        "population_density_per_km2": 15645,
+        "umr_monthly_idr": 5200000,
+        "economic_indicator": "menengah",
+        "dominant_land_use": "perdagangan",
+        "dominant_consumer_segment": "pekerja_dan_pedagang",
+        "purchasing_power_index": 0.65
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [106.810, -6.145],
+            [106.840, -6.145],
+            [106.840, -6.165],
+            [106.810, -6.165],
+            [106.810, -6.145]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357901",
+        "kecamatan": "Lowokwaru",
+        "kabupaten": "Kota Malang",
+        "provinsi": "Jawa Timur",
+        "population": 188000,
+        "area_km2": 22.6,
+        "population_density_per_km2": 8319,
+        "umr_monthly_idr": 3250000,
+        "economic_indicator": "menengah",
+        "dominant_land_use": "permukiman_dan_kampus",
+        "dominant_consumer_segment": "pelajar_mahasiswa",
+        "purchasing_power_index": 0.55
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.595, -7.930],
+            [112.640, -7.930],
+            [112.640, -7.965],
+            [112.595, -7.965],
+            [112.595, -7.930]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357902",
+        "kecamatan": "Klojen",
+        "kabupaten": "Kota Malang",
+        "provinsi": "Jawa Timur",
+        "population": 102000,
+        "area_km2": 8.8,
+        "population_density_per_km2": 11591,
+        "umr_monthly_idr": 3250000,
+        "economic_indicator": "menengah",
+        "dominant_land_use": "pusat_kota_perdagangan",
+        "dominant_consumer_segment": "pekerja_kantoran",
+        "purchasing_power_index": 0.60
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.610, -7.965],
+            [112.640, -7.965],
+            [112.640, -7.995],
+            [112.610, -7.995],
+            [112.610, -7.965]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "357001",
+        "kecamatan": "Wonokromo",
+        "kabupaten": "Kota Surabaya",
+        "provinsi": "Jawa Timur",
+        "population": 172000,
+        "area_km2": 8.5,
+        "population_density_per_km2": 20235,
+        "umr_monthly_idr": 4700000,
+        "economic_indicator": "menengah",
+        "dominant_land_use": "permukiman_padat",
+        "dominant_consumer_segment": "permukiman_campuran",
+        "purchasing_power_index": 0.58
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [112.720, -7.305],
+            [112.750, -7.305],
+            [112.750, -7.330],
+            [112.720, -7.330],
+            [112.720, -7.305]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kecamatan_id": "000001",
+        "kecamatan": "Default Area",
+        "kabupaten": "Unknown",
+        "provinsi": "Indonesia",
+        "population": 50000,
+        "area_km2": 10.0,
+        "population_density_per_km2": 5000,
+        "umr_monthly_idr": 2500000,
+        "economic_indicator": "rendah",
+        "dominant_land_use": "campuran",
+        "dominant_consumer_segment": "permukiman_umum",
+        "purchasing_power_index": 0.40
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-180, -90],
+            [180, -90],
+            [180, 90],
+            [-180, 90],
+            [-180, -90]
+          ]
+        ]
+      }
+    }
+  ]
+}
